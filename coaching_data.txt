@@ -1,0 +1,53 @@
+Before we begin, I want to share with you the records of feedback requests provided by me in the examples of successful interactions. Please use them as guidance when responding in this interaction. Let me know you are ready to start by responding with, "How can I help you?"
+
+***INTERACTION START***
+During this interaction, you asked me to check if you were free at the time proposed by Santiago Delgado in his most recent email. Below are the steps taken to respond to your request along with the tools utilized:
+1. **Prompt 1**: You asked whether you were free for a proposed meeting time by Santiago Delgado.
+   - **Tool Call 1**: `functions.o365search_emails` was used with the query `"from:Santiago Delgado"` to find the most recent email.
+   - **Result 1**: The most recent email was found as well as its message_id.
+2. **Prompt 2**: Based on the retrieved email content.
+   - **Tool Call 2**: `functions.o365search_email` was used with the message_id found in the previous prompt.
+   - **Result 2**: The most recent email's full content was retrieved.
+3. **Prompt 3**: Based on the retrieved email content.
+   - **Tool Call 3**: `functions.o365parse_proposed_times` was used with the full email content to extract the proposed meeting time.
+   - **Result 3**: The proposed meeting time was identified as January 16, 2024, from 3 pm to 5 pm ET.
+4. **Prompt 4**: To check your availability for the proposed time.
+   - **Tool Call 4**: `functions.o365search_events` was used with the start and end datetimes of the proposed meeting time to search your calendar for overlapping events.
+   - **Result 3**: Two overlapping events were identified - one from 2 pm to 3 pm and another from 3:30 pm to 4 pm on January 16, 2024, which means you are not available at 3 pm but have a free slot from 3 pm to 3:30 pm.
+***INTERACTION END***
+
+***INTERACTION START***
+During this interaction, you asked me to summarize the most recent email from Paul Hamilton. Below are the steps taken to respond to your request along with the tools utilized:
+1. **Prompt 1**: "Can you please summarize the most recent email from Paul Hamilton?"
+   - **Tool Call1**: `functions.o365search_emails` with the query `"from:Paul Hamilton"` to find the most rcent email.
+   - **Response**: The most recent email was found as well as its message_id.
+2. **Prompt 2**: Based on the retrieved email content.
+   - **Tool Call 2**: `functions.o365search_email` was used with the message_id found in the previous prompt.
+   - **Result 2**: The most recent email's full content was retrieved.
+3. **Prompt 3**: To summarize the email.
+   - **Result 3**: A summary of the most recent email from Paul Hamilton was provided based on the search results. The email contained travel itinerary details from Tzell Travel Group for a trip to Cali, Colombia and included a contact number for Paul Hamilton.
+***INTERACTION END***
+
+***INTERACTION START***
+During this interaction, you requested assistance with drafting an concise email to Kenneth Hurley regarding your availability for the meeting times he proposed. Below are the steps taken to respond to your request along with the tools utilized:
+
+1. **Prompt 1**: You asked me to identify the proposed meeting times included in the most recent email from Kenneth Hurley.
+   - **Tool Call 1**: `functions.o365search_emails` was used with the query `"from:Kenneth Hurley"`.
+   - **Result 1**: The most recent email from Kenneth Hurley was found, and the relevant content was extracted, including the message_id.
+
+2. **Prompt 2**: Based on the identified message_id, I was instructed to retrieve the full content of Kenneth Hurley's email.
+   - **Tool Call 2**: `functions.o365search_email` was used with the message_id found in the previous step.
+   - **Result 2**: The full content of Kenneth Hurley's email was retrieved, revealing additional proposed times not mentioned in the earlier truncated email excerpt.
+
+3. **Prompt 3**: Based on the full content of the email, I was asked to parse the proposed times.
+   - **Tool Call 3**: `functions.o365parse_proposed_times` was used with the content of the full email to extract the proposed meeting times.
+   - **Result 3**: The proposed times were successfully parsed from the email.
+
+4. **Prompt 4**: To check your availability for the proposed times.
+   - **Tool Call 4**: `functions.o365search_events` was used to search your calendar for potential conflicts.
+   - **Result 4**: Your availability was determined for each of the proposed time slots.
+
+5. **Prompt 5**: You requested to draft an email response to Kenneth Hurley based on your availability.
+   - **Tool Use 5**: Based on the availability gathered from your calendar, I drafted a concise reply to Kenneth Hurley confirming which meeting times you can attend and politely declining the times when you are not available.
+
+***INTERACTION END***
