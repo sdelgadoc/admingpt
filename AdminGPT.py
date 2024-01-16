@@ -1,10 +1,12 @@
 from openai import OpenAI
 import time, json, pprint, os
-from tools.search_emails import (
+from tools.o365_toolkit import (
     o365search_emails,
     o365search_email,
     o365search_events,
     o365parse_proposed_times,
+    o365send_message,
+    o365send_event,
     tools,
 )
 from datetime import datetime as dt
@@ -98,7 +100,7 @@ while True:
                 function_arguments = tool_call.function.arguments
                 function_arguments = json.loads(function_arguments)
 
-                # Case statement for each function
+                # Case statement to execute each toolkit function
                 if function_name == "o365search_emails":
                     output = o365search_emails(**function_arguments)
                 elif function_name == "o365search_email":
@@ -109,6 +111,10 @@ while True:
                     output = o365parse_proposed_times(
                         **function_arguments, client=client, model=model
                     )
+                elif function_name == "o365send_message":
+                    output = o365send_message(**function_arguments)
+                elif function_name == "o365send_event":
+                    output = o365send_event(**function_arguments)
 
                 # Clean the function output into JSON-like output
                 output = pprint.pformat(output)

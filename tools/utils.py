@@ -1,5 +1,7 @@
 """O365 tool utils."""
+
 import os
+
 
 def clean_body(body: str) -> str:
     """Clean body of a message or event."""

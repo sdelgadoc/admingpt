@@ -158,14 +158,113 @@ tools = [
                     "email_output": {
                         "type": "string",
                         "description": (
-                            "A string with the full and complete output of the email including"
-                            " the from, subject, body, date, to, and cc data. Ensure"
-                            " that no part of the email information is omitted to"
-                            " accurately extract proposed meeting times."
+                            "A string with the full and complete output of the email"
+                            " including the from, subject, body, date, to, and cc data."
+                            " Ensure that no part of the email information is omitted"
+                            " to accurately extract proposed meeting times."
                         ),
                     },
                 },
                 "required": ["email_content"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "o365send_message",
+            "description": (
+                "Use this tool to send an email with the provided message fields."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": "string",
+                        "description": "The message body to be sent.",
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": (
+                            "An array of the recipients' email addresses, each"
+                            " representing a recipient of the message."
+                        ),
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the message.",
+                    },
+                    "cc": {
+                        "type": "string",
+                        "description": (
+                            "An array of the CC recipients' email addresses, each"
+                            " representing a recipient of the message."
+                        ),
+                    },
+                    "bcc": {
+                        "type": "string",
+                        "description": (
+                            "An array of the BCC recipients' email addresses, each"
+                            " representing a recipient of the message."
+                        ),
+                    },
+                },
+                "required": ["to", "body"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "o365send_event",
+            "description": (
+                "Use this tool to create and send an event with the provided event"
+                " fields."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": "string",
+                        "description": "The message body to include in the event.",
+                    },
+                    "attendees": {
+                        "type": "string",
+                        "description": (
+                            "An array of the recipients' email addresses, each"
+                            " representing a recipient of the event."
+                        ),
+                    },
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject of the event.",
+                    },
+                    "start_datetime": {
+                        "type": "string",
+                        "description": (
+                            " The start datetime for the event in the following format:"
+                            '  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
+                            " and time  components, and the time zone offset is"
+                            " specified as ±hh:mm.  For example:"
+                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
+                            " at 10:30 AM in a time zone with a positive offset of 3 "
+                            " hours from Coordinated Universal Time (UTC)."
+                        ),
+                    },
+                    "end_datetime": {
+                        "type": "string",
+                        "description": (
+                            " The end datetime for the event in the following format: "
+                            ' YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
+                            " and time  components, and the time zone offset is"
+                            " specified as ±hh:mm.  For example:"
+                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
+                            " at 10:30 AM in a time zone with a positive offset of 3 "
+                            " hours from Coordinated Universal Time (UTC)."
+                        ),
+                    },
+                },
+                "required": ["subject", "start_datetime", "end_datetime"],
             },
         },
     },
@@ -224,10 +323,12 @@ def o365parse_proposed_times(
     )
 
     response = client.chat.completions.create(
-        messages=[{
-            "role": "user",
-            "content": prompt + " " + email_output,
-        }],
+        messages=[
+            {
+                "role": "user",
+                "content": prompt + " " + email_output,
+            }
+        ],
         model=model,
     )
 
@@ -376,3 +477,54 @@ def o365search_events(
         output_events.append(output_event)
 
     return output_events
+
+
+def o365send_message(
+    body: str, to: [str], subject: str, cc: [str] = None, bcc: [str] = None
+):
+    # Get mailbox object
+    account = authenticate()
+    mailbox = account.mailbox()
+    message = mailbox.new_message()
+
+    # Assign message values
+    message.body = body
+    message.subject = subject
+    message.to.add(to)
+    if cc is not None:
+        message.cc.add(cc)
+    if bcc is not None:
+        message.bcc.add(bcc)
+
+    message.send()
+
+    output = "Message sent: " + str(message)
+    return output
+
+
+def o365send_event(
+    subject: str,
+    start_datetime: str,
+    end_datetime: str,
+    body: str = "",
+    attendees: [str] = [],
+):
+    # Get calendar object
+    account = authenticate()
+    schedule = account.schedule()
+    calendar = schedule.get_default_calendar()
+
+    event = calendar.new_event()
+
+    event.body = body
+    event.subject = subject
+    event.start = dt.strptime(start_datetime, UTC_FORMAT)
+    event.end = dt.strptime(end_datetime, UTC_FORMAT)
+    for attendee in attendees:
+        event.attendees.add(attendee)
+
+    # TO-DO: Look into PytzUsageWarning
+    event.save()
+
+    output = "Event sent: " + str(event)
+    return output
