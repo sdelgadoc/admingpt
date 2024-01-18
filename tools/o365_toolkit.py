@@ -181,7 +181,12 @@ tools = [
                 "properties": {
                     "body": {
                         "type": "string",
-                        "description": "The message body to be sent.",
+                        "description": (
+                            "The HTML formatted content of the message body to be sent."
+                            " Always include the necessary HTML tags, such as <html>,"
+                            " <head>, <body>, etc., to ensure the content is"
+                            " interpreted as HTML by the recipient's email client."
+                        ),
                     },
                     "to": {
                         "type": "string",
