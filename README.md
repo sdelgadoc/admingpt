@@ -17,22 +17,18 @@ Unlock the full potential of your email and calendar management with AdminGPT an
 
 ## 🔧 Installation
 
-Follow these steps to setup AutoGPT on your system:
+Follow these steps to setup AutoGPT on your system, or if you want to get started more quickly, click on the link below to run Github Codespaces and skipt steps 1 and 2:
 
-### 1. Generate an OpenAI API key
-Follow the instructions as per the [OpenAI API Quickstart](https://platform.openai.com/docs/quickstart?context=python)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sdelgado/AdminGPT)
 
-### 2. Generate your Microsoft Graph credentials
-To use this toolkit, you need to set up your credentials explained in the [Microsoft Graph authentication and authorization overview](https://learn.microsoft.com/en-us/graph/auth/). Once you've received a CLIENT_ID and CLIENT_SECRET, you can input them as environmental variables below. You can also use the authentication instructions from the [O365 Python library documentation](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite).
-
-### 3. Clone the Repository
+### 1. Clone the Repository
 To clone the repository to your local machine, use the following command in your terminal:
 
 `git clone https://github.com/sdelgadoc/AdminGPT.git`
 
 This will create a local copy of the repository.
 
-### 4. Install Required Dependencies
+### 2. Install Required Dependencies
 After cloning the repository, navigate to the AdminGPT directory using:
 
 `cd AdminGPT`
@@ -43,6 +39,11 @@ Then, install the necessary dependencies by running:
 
 This command installs all the packages listed in requirements.txt, ensuring the project runs correctly.
 
+### 3. Generate an OpenAI API key
+Follow the instructions as per the [OpenAI API Quickstart](https://platform.openai.com/docs/quickstart?context=python)
+
+### 4. Generate your Microsoft Graph credentials
+To use this toolkit, you need to set up your credentials explained in the [Microsoft Graph authentication and authorization overview](https://learn.microsoft.com/en-us/graph/auth/). Once you've received a CLIENT_ID and CLIENT_SECRET, you can input them as environmental variables below. You can also use the authentication instructions from the [O365 Python library documentation](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite).
 
 ## 🧪 Test the Auto-GPT Email Plugin
 
