@@ -73,7 +73,7 @@ tools = [
                     "message_id": {
                         "type": "string",
                         "description": (
-                            "The message_id for the email you wamt tp retrieve. ALWAYS"
+                            "The message_id for the email you want to retrieve. ALWAYS"
                             " respond with values for all parameters in this tool."
                         ),
                     },
@@ -215,6 +215,37 @@ tools = [
                     },
                 },
                 "required": ["to", "body"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "o365reply_message",
+            "description": (
+                "Use this tool to reply to an existing email using the provided message"
+                " fields."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message_id": {
+                        "type": "string",
+                        "description": (
+                            "The message_id for the email you want to reply to."
+                        ),
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": (
+                            "The HTML formatted content of the reply message body to be"
+                            " sent. Always include the necessary HTML tags, such as"
+                            " <html>, <head>, <body>, etc., to ensure the content is"
+                            " interpreted as HTML by the recipient's email client. "
+                        ),
+                    },
+                },
+                "required": ["message_id", "body"],
             },
         },
     },
@@ -504,6 +535,23 @@ def o365send_message(
     message.send()
 
     output = "Message sent: " + str(message)
+    return output
+
+
+def o365reply_message(message_id: str, body: str):
+    # Get mailbox object
+    account = authenticate()
+    mailbox = account.mailbox()
+
+    message = mailbox.get_message(object_id=message_id)
+    reply_message = message.reply()
+
+    # Assign message body value
+    reply_message.body = body
+
+    reply_message.send()
+
+    output = "Message sent: " + str(reply_message)
     return output
 
 
