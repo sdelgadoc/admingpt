@@ -223,8 +223,10 @@ tools = [
         "function": {
             "name": "o365reply_message",
             "description": (
-                "Use this tool to reply to an existing email using the provided message"
-                " fields."
+                "Use this tool to send a reply to an existing email using the provided"
+                " message fields. This function should only be executed when you are"
+                " certain you want to send the reply email, as it will send the reply"
+                " immediately upon execution"
             ),
             "parameters": {
                 "type": "object",
@@ -254,8 +256,10 @@ tools = [
         "function": {
             "name": "o365send_event",
             "description": (
-                "Use this tool to create and send an event with the provided event"
-                " fields."
+                "Use this tool to compose and send a new email using the provided"
+                " message fields. Only execute this function when you intend to send"
+                " the email immediately, as this will dispatch the email as soon as the"
+                " function is run. fields."
             ),
             "parameters": {
                 "type": "object",
@@ -359,12 +363,10 @@ def o365parse_proposed_times(
     )
 
     response = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": prompt + " " + email_output,
-            }
-        ],
+        messages=[{
+            "role": "user",
+            "content": prompt + " " + email_output,
+        }],
         model=model,
     )
 
