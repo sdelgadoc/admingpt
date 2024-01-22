@@ -6,6 +6,7 @@ from tools.o365_toolkit import (
     o365search_events,
     o365parse_proposed_times,
     o365send_message,
+    o365reply_message,
     o365send_event,
     tools,
 )
@@ -14,7 +15,7 @@ from datetime import datetime as dt
 
 # The main function to run the assistan
 def run(email_platform: str = "outlook", debug: bool = False):
-    #TO-DO: Add logic to support multiple mail platforms
+    # TO-DO: Add logic to support multiple mail platforms
 
     # Set values for global variables
     LOOP_DELAY_SECONDS = 2
@@ -37,7 +38,7 @@ def run(email_platform: str = "outlook", debug: bool = False):
         + formatted_date
         + ". "
     )
-    
+
     # Add the debug prompt if user runs with debug
     if debug:
         debug_prompt = (
@@ -46,7 +47,7 @@ def run(email_platform: str = "outlook", debug: bool = False):
             " them."
         )
     else:
-        debug_prompt = ""    
+        debug_prompt = ""
     assistant_instructions = assistant_instructions + debug_prompt
 
     client = OpenAI(
@@ -129,6 +130,8 @@ def run(email_platform: str = "outlook", debug: bool = False):
                         output = o365send_message(**function_arguments)
                     elif function_name == "o365send_event":
                         output = o365send_event(**function_arguments)
+                    elif function_name == "o365reply_message":
+                        output = o365reply_message(**function_arguments)
 
                     # Clean the function output into JSON-like output
                     output = pprint.pformat(output)
