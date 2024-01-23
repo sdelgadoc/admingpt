@@ -174,7 +174,13 @@ tools = [
         "function": {
             "name": "o365send_message",
             "description": (
-                "Use this tool to send an email with the provided message fields."
+                "This tool is STRICTLY for sending a new email using the provided"
+                " message fields. NEVER use it to draft an email. This function should"
+                " be used carefully. DO NOT execute this function unless you have clear"
+                " and explicit instructions from the user to send the email"
+                " immediately. Upon execution without such instructions, create a draft"
+                " and present it to the user for approval, ensuring that the email is"
+                " not sent until the user gives a clear directive to do so"
             ),
             "parameters": {
                 "type": "object",
@@ -223,10 +229,13 @@ tools = [
         "function": {
             "name": "o365reply_message",
             "description": (
-                "Use this tool to send a reply to an existing email using the provided"
-                " message fields. This function should only be executed when you are"
-                " certain you want to send the reply email, as it will send the reply"
-                " immediately upon execution"
+                "This tool is STRICTLY for sending a reply to an existing email. NEVER"
+                " use it to draft an email. This function should be used carefully. DO"
+                " NOT execute this function unless you have clear and explicit"
+                " instructions from the user to send the reply email immediately. Upon"
+                " execution without such instructions, create a draft and present it to"
+                " the user for approval, ensuring that the email is not sent until the"
+                " user gives a clear directive to do so"
             ),
             "parameters": {
                 "type": "object",
