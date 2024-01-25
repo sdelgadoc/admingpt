@@ -8,6 +8,7 @@ from tools.o365_toolkit import (
     o365send_message,
     o365reply_message,
     o365send_event,
+    o365find_free_time_slots,
     tools,
 )
 from datetime import datetime as dt
@@ -132,6 +133,8 @@ def run(email_platform: str = "outlook", debug: bool = False):
                         output = o365send_event(**function_arguments)
                     elif function_name == "o365reply_message":
                         output = o365reply_message(**function_arguments)
+                    elif function_name == "o365find_free_time_slots":
+                        output = o365find_free_time_slots(**function_arguments)
 
                     # Clean the function output into JSON-like output
                     output = pprint.pformat(output)

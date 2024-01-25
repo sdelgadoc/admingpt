@@ -1,5 +1,6 @@
+import json
 from tools.utils import authenticate, clean_body, UTC_FORMAT
-from datetime import datetime as dt
+from datetime import datetime
 
 tools = [
     {
@@ -317,6 +318,39 @@ tools = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "o365find_free_time_slots",
+            "description": (
+                "ALWAYS use this tool to determine when the user is free, open, or"
+                " available by analyzing the calendar events for the day. This tool"
+                " processes a day's event schedule from a JSON string and finds free"
+                " time slots. The output is a JSON string with each free slot's start"
+                " and end times, which can be conveyed to the user for scheduling and"
+                " meeting planning. Remember to use this function whenever you need to"
+                " provide a list of free time slots for a given date."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "events_json": {
+                        "type": "string",
+                        "description": (
+                            "A JSON string containing an array of event objects. Each"
+                            " event object should include 'start_datetime' and"
+                            " 'end_datetime' fields specifying the event's start and"
+                            " end times in ISO 8601 format. The events should represent"
+                            " a single day's schedule. The function will use the date"
+                            " of the first event to determine the day for which to find"
+                            " free time slots."
+                        ),
+                    },
+                },
+                "required": ["events_json"],
+            },
+        },
+    },
 ]
 
 
@@ -326,49 +360,43 @@ def o365parse_proposed_times(
     model: str,
 ):
     prompt = (
-        "Given the email content provided, your task is to identify all the "
-        "proposed times for a potential meeting as indicated by the sender of "
-        "the most recent email. Extract these times and convert them into a "
-        "structured format. Do not provide any explanations, context, or "
-        "additional text outside of the JSON structure. The structured data "
-        "should be presented in JSON format as shown below. Ensure that the "
-        "dates and times are accurate based on the information provided in the "
-        "email.\n\n"
-        "Important:\n\n"
-        "If the sender specifies a day or days without indicating specific "
-        "times, assume they are referring to standard business hours between "
-        "8:00 a.m. and 5:00 p.m.\n"
-        "Specify the time zone for each proposed meeting time. If the email "
-        "content does not specify a time zone, assume that all times refer to "
-        "Eastern Time (ET).\n"
-        "If any participant expresses a preference for or against certain days "
-        "or times, adjust the proposed times accordingly.\n\n"
-        "Please use the following JSON structure for your response:\n\n"
-        "{\n"
-        '  "proposed_times": [\n'
-        "    {\n"
-        '      "start_time": "[Start Time in ISO 8601 Format]", // An example '
-        'would be "start_time": "2023-06-09T11:00:00-04:00"\n'
-        '      "end_time": "[End Time in ISO 8601 Format]", // An example '
-        'would be "end_time": "2023-06-09T13:00:00-04:00"\n'
-        '      "time_zone": "[Time Zone in Standard Format]" // An example '
-        'would be "time_zone": "America/New_York"\n'
-        "    },\n"
-        "    ... [additional times, if any]\n"
-        "  ]\n"
-        "}\n"
-        "Instructions:\n\n"
-        "Maintain the integrity of the JSON structure provided. Do not include "
-        "explanations or any additional text outside of the JSON structure.\n"
-        'Replace placeholder text (e.g., "[Start Time in ISO 8601 Format]") '
-        "with actual information extracted from the email.\n"
-        'Ensure the "start_time" and "end_time" are in the correct ISO 8601 '
-        'format, and the "time_zone" is clearly indicated. If not specified '
-        'in the email, use "America/New_York" to represent Eastern Time.\n'
-        "Do not add any assumptions or make changes that are not supported by "
-        "the content of the email. Only assume standard business hours if "
-        "specific times are not mentioned.\n\n"
-        "Email Content:\n\n"
+        "Given the email content provided, your task is to identify all the proposed"
+        " times for a potential meeting as indicated by the sender of the most recent"
+        " email. Extract these times and convert them into a structured format. Do not"
+        " provide any explanations, context, or additional text outside of the JSON"
+        " structure. The structured data should be presented in JSON format as shown"
+        " below. Ensure that the dates and times are accurate based on the information"
+        " provided in the email.\n\nImportant:\n\nIf the sender specifies a day or days"
+        " without indicating specific times, assume they are referring to standard"
+        " business hours between 8:00 a.m. and 5:00 p.m.\nSpecify the time zone for"
+        " each proposed meeting time. If the email content does not specify a time"
+        " zone, assume that all times refer to Eastern Time (ET).\nIf any participant"
+        " expresses a preference for or against certain days or times, adjust the"
+        " proposed times accordingly.\n\nPlease use the following JSON structure for"
+        ' your response:\n\n{\n  "proposed_times": [\n    {\n      "start_time":'
+        ' "[Start Time in ISO 8601 Format]", // An example would be "start_time":'
+        ' "2023-06-09T11:00:00-04:00"\n      "end_time": "[End Time in ISO 8601'
+        ' Format]", // An example would be "end_time": "2023-06-09T13:00:00-04:00"\n   '
+        '   "time_zone": "[Time Zone in Standard Format]" // An example would be'
+        ' "time_zone": "America/New_York"\n    },\n    ... [additional times, if any]\n'
+        "  ]\n}\nInstructions:\n\n- Maintain the integrity of the JSON structure"
+        " provided. Do not include explanations or any additional text outside of the"
+        " JSON structure.- Replace placeholder text (e.g., '[Start Time in ISO 8601"
+        " Format]') with actual information extracted from the email, including a"
+        " specific date if mentioned.- Ensure the 'start_time' and 'end_time' are"
+        " in the correct ISO 8601 format, and include the relevant date along with the"
+        " time.- Clearly indicate the 'time_zone' if specified. If not specified in"
+        " the email, use 'America/New_York' to represent Eastern Time.-"
+        " Cross-reference the proposed times with the context supplied in the email,"
+        " such as previous email dates or specific days of the week mentioned, to"
+        " determine the correct meeting date.- Do not add any assumptions or make"
+        " changes that are not supported by the content of the email. Only assume"
+        " standard business hours if specific times are not mentioned, ensuring they"
+        " are associated with the correct day.- Pay special attention to any details in"
+        " the email that specify or hint at a meeting date, especially if linked to the"
+        " days of the week or if it is in response to previous messages. Verify these"
+        " details to ensure the proposed dates and times match the sender's"
+        " intent.Email Content:\n\n"
     )
 
     response = client.chat.completions.create(
@@ -487,8 +515,8 @@ def o365search_events(
     calendar = schedule.get_default_calendar()
 
     # Process the date range parameters
-    start_datetime_query = dt.strptime(start_datetime, UTC_FORMAT)
-    end_datetime_query = dt.strptime(end_datetime, UTC_FORMAT)
+    start_datetime_query = datetime.strptime(start_datetime, UTC_FORMAT)
+    end_datetime_query = datetime.strptime(end_datetime, UTC_FORMAT)
 
     # Run the query
     q = calendar.new_query("start").greater_equal(start_datetime_query)
@@ -582,8 +610,8 @@ def o365send_event(
 
     event.body = body
     event.subject = subject
-    event.start = dt.strptime(start_datetime, UTC_FORMAT)
-    event.end = dt.strptime(end_datetime, UTC_FORMAT)
+    event.start = datetime.strptime(start_datetime, UTC_FORMAT)
+    event.end = datetime.strptime(end_datetime, UTC_FORMAT)
     for attendee in attendees:
         event.attendees.add(attendee)
 
@@ -592,3 +620,63 @@ def o365send_event(
 
     output = "Event sent: " + str(event)
     return output
+
+
+def o365find_free_time_slots(events_json):
+    """
+    Processes a JSON string of scheduled events and returns a list of free time slots within the day.
+
+    Parameters:
+    events_json (str): A JSON string containing scheduled events, each with a start and end datetime.
+
+    Returns:
+    str: A JSON string representing free time slots in the day.
+
+    Note:
+    This function was developed 100% by the OpenAI API with minimal huma intervention
+    """
+
+    # Parse the input data
+    events = json.loads(events_json)
+
+    # Sort events based on start time
+    events.sort(key=lambda x: x["start_datetime"])
+
+    # Extract the date from the first event to set day_start and day_end
+    first_event_date = datetime.strptime(
+        events[0]["start_datetime"], "%Y-%m-%dT%H:%M:%S%z"
+    ).date()
+    first_event_tzinfo = datetime.strptime(
+        events[0]["start_datetime"], "%Y-%m-%dT%H:%M:%S%z"
+    ).tzinfo
+    day_start = datetime.combine(
+        first_event_date, datetime.min.time(), tzinfo=first_event_tzinfo
+    )
+    day_end = datetime.combine(
+        first_event_date, datetime.max.time(), tzinfo=first_event_tzinfo
+    )
+
+    # Initialize variables
+    last_end_time = day_start
+    free_slots = []
+
+    # Identify free time slots
+    for event in events:
+        start_time = datetime.strptime(event["start_datetime"], "%Y-%m-%dT%H:%M:%S%z")
+        end_time = datetime.strptime(event["end_datetime"], "%Y-%m-%dT%H:%M:%S%z")
+        if start_time > last_end_time:
+            free_slots.append({
+                "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                "end_datetime": start_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            })
+        last_end_time = max(last_end_time, end_time)
+
+    # Check for free time at the end of the day
+    if last_end_time < day_end:
+        free_slots.append({
+            "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "end_datetime": day_end.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        })
+
+    # Format and output the response
+    return json.dumps(free_slots, indent=4)
