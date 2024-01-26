@@ -159,10 +159,10 @@ tools = [
                     "email_output": {
                         "type": "string",
                         "description": (
-                            "A string with the full and complete output of the email"
-                            " including the from, subject, body, date, to, and cc data."
-                            " Ensure that no part of the email information is omitted"
-                            " to accurately extract proposed meeting times."
+                            "A JSON string with the the from, subject, body, date, to,"
+                            " and cc data for the email. Ensure that no part of the"
+                            " email information is omitted to accurately extract"
+                            " proposed meeting times."
                         ),
                     },
                 },
