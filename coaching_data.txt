@@ -30,7 +30,7 @@ During this interaction, you asked me to identify the proposed meeting time in t
 2. **Prompt 2**: Based on the retrieved email content.
    - **Tool Call 2**: `functions.o365search_email` was used with the message_id found in the previous prompt.
    - **Result 2**: The most recent email's full content was retrieved.
-2. **Prompt 3**: Based on the retrieved email content.
+3. **Prompt 3**: Based on the retrieved email content.
    - **Tool Call 3**: `functions.o365parse_proposed_times` was used with the full and complete output of the email to extract any proposed meeting times.
    - **Result 3**: The output confirmed that Santiago Delgado is proposing a call this Thursday, February 1 between 8 am and 5 pm EST.
 ***INTERACTION END***
@@ -52,15 +52,17 @@ During this interaction, you asked whether you were available at the times propo
 ***INTERACTION END***
 
 ***INTERACTION START***
-During this interaction, you requested to draft a short reply to Lawson Moore's most recent email, letting him know that you were not interested. Below are the steps taken to fulfill your request along with the tools utilized:
-1. **Prompt 1**: "Can you please draft a short reply to Lawson Moore's most recent email, on behalf of you as my administrative assistant, letting him know that I'm not interested? Please show me the email before sending."
-   - **Tool Call 1**: `functions.o365search_emails` with the query `"from:Lawson Moore"` to find the most recent email.
-   - **Result 1**: The most recent email from Lawson Moore was found along with its message_id.
-2. **Prompt 2**: Based on the retrieved email message_id.
-   - **Tool Call 2**: `functions.o365search_email` was used with the message_id to retrieve the full content of the most recent email.
-3. **Prompt 3**: To draft a reply to Lawson Moore's email.
-   - **Result 3**: An email draft was composed informing Lawson Moore that you are not interested in his proposal, and shown to you.
-4. **Prompt 4**: You stated that the draft looks good and instructed to send it.
-   - **Tool Call 4**: `functions.o365reply_message` was used with the message_id and a draft of the reply email's body in HTML format.
-   - **Result 4**: I confirmed that the email had already been sent and asked if there was anything else you needed assistance with.
+During this interaction, you asked me to draft a short reply to Andrew Frank's most recent email, on my behalf as your administrative assistant, to inform him that we're not interested. Below are the steps taken to respond to your request along with the tools utilized:
+1. **Prompt 1**: "Can you please draft a short reply to Andrew Frank's most recent email, on behalf of you, letting him know we're not interested?"
+   - **Tool Call 1**: `functions.o365search_emails` with the query `"from:Andrew Frank"`.
+   - **Response**: Identified the most recent email from Andrew Frank with its `message_id`.
+2. **Prompt 2**: Based on the retrieved email content.
+   - **Tool Call 2**: `functions.o365search_email` was used with the message_id found in the previous prompt.
+   - **Result 2**: The most recent email's full content was retrieved.
+3. **Prompt 3**: Once I reviewed the draft.
+   - **Tool Call 3**: `functions.o365reply_message` with the `message_id` to draft the reply email's content.
+   - **Response**: Draft saved with the subject "referral/MS alum".
+4. **Prompt 4**: You reviewed the draft and instructed me to send it.
+   - **Tool Call 4**: `functions.o365reply_message` with the `message_id` and content of the reply, set to send immediately without drafting.
+   - **Result**: The email was sent to Andrew Frank.
 ***INTERACTION END***

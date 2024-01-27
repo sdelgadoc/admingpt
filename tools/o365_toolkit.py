@@ -220,8 +220,18 @@ tools = [
                             " representing a recipient of the message."
                         ),
                     },
+                    "create_draft": {
+                        "type": "boolean",
+                        "description": (
+                            "A boolean parameter (true/false). If set to `true`, the"
+                            " function creates an email draft that can be reviewed by"
+                            " the user without sending. If set to `false`, or is"
+                            " omitted, the email is sent immediately upon executing the"
+                            " function."
+                        ),
+                    },
                 },
-                "required": ["to", "body"],
+                "required": ["to", "body", "create_draft"],
             },
         },
     },
@@ -256,8 +266,18 @@ tools = [
                             " interpreted as HTML by the recipient's email client. "
                         ),
                     },
+                    "create_draft": {
+                        "type": "boolean",
+                        "description": (
+                            "A boolean parameter (true/false). If set to `true`, the"
+                            " function creates an email draft that can be reviewed by"
+                            " the user without sending. If set to `false`, or is"
+                            " omitted, the email is sent immediately upon executing the"
+                            " function."
+                        ),
+                    },
                 },
-                "required": ["message_id", "body"],
+                "required": ["message_id", "body", "create_draft"],
             },
         },
     },
@@ -555,7 +575,12 @@ def o365search_events(
 
 
 def o365send_message(
-    body: str, to: [str], subject: str, cc: [str] = None, bcc: [str] = None
+    body: str,
+    to: [str],
+    subject: str,
+    cc: [str] = None,
+    bcc: [str] = None,
+    create_draft: bool = False,
 ):
     # Get mailbox object
     account = authenticate()
@@ -571,13 +596,17 @@ def o365send_message(
     if bcc is not None:
         message.bcc.add(bcc)
 
-    message.send()
+    if create_draft:
+        message.save_draft()
+        output = "Draft saved: " + str(message)
+    else:
+        message.send()
+        output = "Message sent: " + str(message)
 
-    output = "Message sent: " + str(message)
     return output
 
 
-def o365reply_message(message_id: str, body: str):
+def o365reply_message(message_id: str, body: str, create_draft: bool = False):
     # Get mailbox object
     account = authenticate()
     mailbox = account.mailbox()
@@ -588,9 +617,13 @@ def o365reply_message(message_id: str, body: str):
     # Assign message body value
     reply_message.body = body
 
-    reply_message.send()
+    if create_draft:
+        reply_message.save_draft()
+        output = "Draft saved: " + str(message)
+    else:
+        reply_message.send()
+        output = "Message sent: " + str(message)
 
-    output = "Message sent: " + str(reply_message)
     return output
 
 
