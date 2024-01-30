@@ -8,13 +8,16 @@ tools = [
         "function": {
             "name": "o365search_emails",
             "description": (
-                "Search for email messages and provide truncated results for an"
-                " overview. This tool is best used for identifying emails to be"
-                " examined in detail. Use this in conjunction with the"
-                " o365search_email tool to retrieve the complete content of specific"
-                " emails afterward. The input must be a valid Microsoft Graph v1.0"
-                " $search query. ALWAYS respond with values for all parameters in this"
-                " tool. The output is a JSON list of the requested resource."
+                "Use this function to quickly identify recent or relevant emails based"
+                " on specific query criteria. It provides an overview of multiple"
+                " emails, including truncated contents. Ideal for initial searches when"
+                " you need to locate one or more emails quickly. Note that details may"
+                " be omitted, so it's advisable to use `functions.o365search_email`"
+                " following this function to read the complete message when detailed"
+                " information is needed, such as for parsing meeting times or reading"
+                " attachments. The input must be a valid Microsoft Graph v1.0 $search"
+                " query. ALWAYS respond with values for all parameters in this tool."
+                " The output is a JSON list of the requested resource."
             ),
             "parameters": {
                 "type": "object",
@@ -63,10 +66,15 @@ tools = [
         "function": {
             "name": "o365search_email",
             "description": (
-                "Search for one email message using the email's message_id. Use the"
-                " o365search_emails function to retrieve an emails's message_id."
-                " ALWAYS respond with values for all parameters in this"
-                " tool. The output is a JSON list of the requested resource."
+                "Use this function when you need to retrieve the full and detailed"
+                " content of a specific email, identified by its `message_id`. This is"
+                " essential when complete information is required for thorough"
+                " analysis, as in the case of identifying proposed meeting times,"
+                " reading complete attachments, or understanding the full context of"
+                " the email. Employ this function after identifying the email of"
+                " interest with `functions.o365search_emails` ALWAYS respond with"
+                " values for all parameters in this tool. The output is a JSON list of"
+                " the requested resource."
             ),
             "parameters": {
                 "type": "object",
@@ -190,9 +198,15 @@ tools = [
                         "type": "string",
                         "description": (
                             "The HTML formatted content of the message body to be sent."
-                            " Always include the necessary HTML tags, such as <html>,"
-                            " <head>, <body>, etc., to ensure the content is"
-                            " interpreted as HTML by the recipient's email client."
+                            " Ensure that paragraphs are separated by additional blank"
+                            " lines for enhanced readability and visual appeal. Use"
+                            " `<p></p>` tags for each paragraph and insert `<br>` tags"
+                            " in between paragraphs to create the desired spacing. For"
+                            " example: `<p>Dear Recipient,</p><p>This is the"
+                            " first line or paragraph.</p><p>This is the last"
+                            " line or"
+                            " paragraph.</p><br><p>Regards,</p><p>Sender"
+                            " Name</p><br>'"
                         ),
                     },
                     "to": {
@@ -260,10 +274,16 @@ tools = [
                     "body": {
                         "type": "string",
                         "description": (
-                            "The HTML formatted content of the reply message body to be"
-                            " sent. Always include the necessary HTML tags, such as"
-                            " <html>, <head>, <body>, etc., to ensure the content is"
-                            " interpreted as HTML by the recipient's email client. "
+                            "The HTML formatted content of the message body to be sent."
+                            " Ensure that paragraphs are separated by additional blank"
+                            " lines for enhanced readability and visual appeal. Use"
+                            " `<p></p>` tags for each paragraph and insert `<br>` tags"
+                            " in between paragraphs to create the desired spacing. For"
+                            " example: `<p>Dear Recipient,</p><p>This is the"
+                            " first line or paragraph.</p><p>This is the last"
+                            " line or"
+                            " paragraph.</p><br><p>Regards,</p><p>Sender"
+                            " Name</p><br>'"
                         ),
                     },
                     "create_draft": {

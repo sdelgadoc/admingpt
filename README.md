@@ -6,14 +6,14 @@ AdmiGPT is an AI-powered administrative assistant, harnessing the power of OpenA
 [![GitHub Repo stars](https://img.shields.io/github/stars/sdelgadoc/AdminGPT?style=social)](https://github.com/sdelgadoc/AdminGPT/stargazers)
 
 ## 🌟 Key Features
-
 - 📧 Email Summarization & Highlight Action Items: Efficiently summarize long emails and pinpoint critical action items, streamlining your workflow.
 - 🤖 Intelligent Meeting Proposals: Automatically understand meeting proposals in emails and check your availability.
 - 📅 Advanced Calendar Management: View your appointments and find free times, all within the context of your day.
 - ✍️ Automated Email Drafting & Sending: Draft and send responses on your behalf, enhancing efficiency and professionalism.
 - 🔄 Seamless Email & Calendar Integration: Coordinate email and calendar to automatically respond to meeting requests, suggesting new times if you're unavailable, and send meeting invites as needed.
 
-Unlock the full potential of your email and calendar management with AdminGPT and revolutionize your email and calendar experience today! 🚀
+## 📢 We Need Your Feedback!
+Help shape the future of AdminGPT! Participate in our [feature prioritization poll](https://github.com/sdelgadoc/AdminGPT/discussions/1) and tell us what features you would like to see next. Your input is vital in guiding the development of AdminGPT. [Take the poll now!](https://github.com/sdelgadoc/AdminGPT/discussions/1)
 
 ## 🔧 Installation
 
