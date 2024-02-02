@@ -183,13 +183,10 @@ tools = [
         "function": {
             "name": "o365send_message",
             "description": (
-                "This tool is STRICTLY for sending a new email using the provided"
-                " message fields. NEVER use it to draft an email. This function should"
-                " be used carefully. DO NOT execute this function unless you have clear"
-                " and explicit instructions from the user to send the email"
-                " immediately. Upon execution without such instructions, create a draft"
-                " and present it to the user for approval, ensuring that the email is"
-                " not sent until the user gives a clear directive to do so"
+                "This function sends or creates drafts of new emails. Do not send an"
+                " email unless the user gives a clear directive to do so. The function"
+                " can either send emails immediately or create drafts for later review,"
+                " based on a boolean parameter."
             ),
             "parameters": {
                 "type": "object",
@@ -254,13 +251,10 @@ tools = [
         "function": {
             "name": "o365reply_message",
             "description": (
-                "This tool is STRICTLY for sending a reply to an existing email. NEVER"
-                " use it to draft an email. This function should be used carefully. DO"
-                " NOT execute this function unless you have clear and explicit"
-                " instructions from the user to send the reply email immediately. Upon"
-                " execution without such instructions, create a draft and present it to"
-                " the user for approval, ensuring that the email is not sent until the"
-                " user gives a clear directive to do so"
+                "This function replies or creates reply drafts to existing emails. Do"
+                " not reply to an email unless the user gives a clear directive to do"
+                " so. The function can either send emails immediately or create drafts"
+                " for later review, based on a boolean parameter."
             ),
             "parameters": {
                 "type": "object",
@@ -689,8 +683,18 @@ def o365find_free_time_slots(events_json):
     This function was developed 100% by the OpenAI API with minimal huma intervention
     """
 
-    # Parse the input data
-    events = json.loads(events_json)
+    # Parse the input data, and return an error if the input is in the incorrect format
+    try:
+        events = json.loads(events_json)
+    except json.decoder.JSONDecodeError as e:
+        error = (
+            "ERROR: When parsing the data in the events_json parameters, the json.loads"
+            " Python function returned the following json.decoder.JSONDecodeError ("
+            + str(e)
+            + "). Please propose changes to the description of the Assistant or any function to avoid this issue and show them to the user. Once the user aknowledges the solution, please update the value of the events_json parameter based on this feedback and run"
+            " the function again."
+        )
+        return error
 
     # Sort events based on start time
     events.sort(key=lambda x: x["start_datetime"])
