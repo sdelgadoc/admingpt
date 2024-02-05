@@ -691,8 +691,8 @@ def o365find_free_time_slots(events_json):
             "ERROR: When parsing the data in the events_json parameters, the json.loads"
             " Python function returned the following json.decoder.JSONDecodeError ("
             + str(e)
-            + "). Please propose changes to the description of the Assistant or any function to avoid this issue and show them to the user. Once the user aknowledges the solution, please update the value of the events_json parameter based on this feedback and run"
-            " the function again."
+            + "). Please review the events_json parameter based on this feedback and"
+            " run the function again."
         )
         return error
 
