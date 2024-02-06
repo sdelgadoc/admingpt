@@ -74,7 +74,7 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 ## 📖 Documentation
 Below are documentation resources to help you learn more about AdminGPT, how it was developed, and how to use it.
 
-- Getting Started Notebook: A step-by-step guide to running AdminGPT, and how it's implemented
+- [Getting Started Tutorial Notebook:](https://github.com/sdelgadoc/AdminGPT/blob/main/o365_tutorial.ipynb) A step-by-step guide to running AdminGPT, and how it's implemented
    - You can find the tutorial notebook [here](https://github.com/sdelgadoc/AdminGPT/blob/main/o365_tutorial.ipynb) in this repo. 
 
 ## ❓ Frequently Asked Questions
