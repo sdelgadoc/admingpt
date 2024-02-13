@@ -49,7 +49,7 @@ To use this toolkit, you need to set up your credentials explained in the [Micro
 
 Test AdminGPT by summarizing a recent email from a particular sender, the most simple functionality.
 
-### Run the AdminGPT command line interface (CLI)**
+### Run the AdminGPT command line interface (CLI)
 1. Set the folling authentication environmental variables:
    - CLIENT_NAME: The name of the person who will be using this assistant
    - CLIENT_EMAIL: The email of the person who will be using this assistant
