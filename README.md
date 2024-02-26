@@ -17,9 +17,9 @@ Help shape the future of AdminGPT! Participate in our [feature prioritization po
 
 ## 🔧 Installation
 
-Follow these steps to setup AutoGPT on your system, or if you want to get started more quickly, click on the link below to run Github Codespaces and skipt steps 1 and 2:
+Follow these steps to setup AdminGPT on your system, or if you want to get started more quickly, click on the link below to run AdminGPT in a Streamlit web interface:
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sdelgado/AdminGPT)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_red.svg)](https://admgpt.streamlit.app/)
 
 ### 1. Clone the Repository
 To clone the repository to your local machine, use the following command in your terminal:
@@ -51,8 +51,6 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 
 ### Run the AdminGPT command line interface (CLI)
 1. Set the folling authentication environmental variables:
-   - CLIENT_NAME: The name of the person who will be using this assistant
-   - CLIENT_EMAIL: The email of the person who will be using this assistant
    - OPENAI_API_KEY: The OpenAI API key for authentication
    - CLIENT_ID: The Microsoft Graph client ID for authentication
    - CLIENT_SECRET: The Microsoft Graph client secret for authentication
@@ -63,11 +61,11 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 
 3. Run the CLI using:
 
-   `python admingtp.py`
+   `python admingtp_cli.py`
 
    If the assistant is running correctly, you should see the following on the command line
 
-   `How can I help you?`
+   `Hello, [YOUR NAME]. How can I help you?`
 
    `Enter your request here:`
 
