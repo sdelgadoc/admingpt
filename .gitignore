@@ -1,2 +1,3 @@
 .vscode/launch.json
 o365_token.txt
+*.pyc
