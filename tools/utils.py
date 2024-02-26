@@ -1,6 +1,5 @@
-"""O365 tool utils."""
-
-import os
+import os, time
+from globals import token, st
 
 
 def clean_body(body: str) -> str:
@@ -26,7 +25,38 @@ def clean_body(body: str) -> str:
         return str(body)
 
 
-def authenticate():
+def authenticate_token():
+    global token
+
+    # Assign the token value from the session state
+    token = st.session_state.token
+
+
+def streamlit_consent_input_token(consent_url):
+    global st
+
+    response = "Click on the [following link to authenticate]("
+    response = response + consent_url
+    response = (
+        response
+        + ") with the Microsoft Graph API. Then, copy and paste the URL you are"
+        " forwarded to in the text box immediately below."
+    )
+
+    st.write(response)
+    message = {"role": "assistant", "content": response}
+    st.session_state.messages.append(message)
+
+    st.text_input("Input token", key="token", on_change=authenticate_token)
+
+    # This is kludgy solution to waiting until the user enters token into the textbox
+    while token == None:
+        time.sleep(2)
+
+    return token
+
+
+def authenticate(streamlit=False):
     """Authenticate using the Microsoft Grah API"""
     try:
         from O365 import Account
@@ -40,7 +70,7 @@ def authenticate():
         client_secret = os.environ["CLIENT_SECRET"]
         credentials = (client_id, client_secret)
     else:
-        logger.error(
+        print(
             "Error: The CLIENT_ID and CLIENT_SECRET environmental variables have not "
             "been set. Visit the following link on how to acquire these authorization "
             "tokens: https://learn.microsoft.com/en-us/graph/auth/"
@@ -50,18 +80,37 @@ def authenticate():
     account = Account(credentials)
 
     if account.is_authenticated is False:
-        if not account.authenticate(
-            scopes=[
-                "https://graph.microsoft.com/Mail.ReadWrite",
-                "https://graph.microsoft.com/Mail.Send",
-                "https://graph.microsoft.com/Calendars.ReadWrite",
-                "https://graph.microsoft.com/MailboxSettings.ReadWrite",
-            ]
-        ):
-            print("Error: Could not authenticate")
-            return None
+        if streamlit == False:
+            if not account.authenticate(
+                scopes=[
+                    "https://graph.microsoft.com/Mail.ReadWrite",
+                    "https://graph.microsoft.com/Mail.Send",
+                    "https://graph.microsoft.com/Calendars.ReadWrite",
+                    "https://graph.microsoft.com/MailboxSettings.ReadWrite",
+                    "https://graph.microsoft.com/User.Read",
+                    "https://graph.microsoft.com/User.ReadBasic.All",
+                ],
+            ):
+                print("Error: Could not authenticate")
+                return None
+            else:
+                return account
         else:
-            return account
+            if not account.authenticate(
+                scopes=[
+                    "https://graph.microsoft.com/Mail.ReadWrite",
+                    "https://graph.microsoft.com/Mail.Send",
+                    "https://graph.microsoft.com/Calendars.ReadWrite",
+                    "https://graph.microsoft.com/MailboxSettings.ReadWrite",
+                    "https://graph.microsoft.com/User.Read",
+                    "https://graph.microsoft.com/User.ReadBasic.All",
+                ],
+                handle_consent=streamlit_consent_input_token,
+            ):
+                print("Error: Could not authenticate")
+                return None
+            else:
+                return account
     else:
         return account
 
