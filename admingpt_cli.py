@@ -16,7 +16,7 @@ model = "gpt-4-1106-preview"
 LOOP_DELAY_SECONDS = 3
 
 # Main loop for the application
-while(True):
+while True:
     # If it's the first loop, coach the Assistant, otherwise request prompt
     if coaching_loop:
         coaching_loop = False
@@ -28,8 +28,8 @@ while(True):
         if prompt.lower() == "stop":
             break
 
-    (client,assistant,thread) = create_client(debug, model)                
-    run = run_prompt(prompt,client,assistant,thread)
+    (client, assistant, thread) = create_client(debug, model)
+    run = run_prompt(prompt, client, assistant, thread)
     response = poll_for_response(client, thread, run, model, debug)
     print(response)
 

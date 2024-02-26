@@ -45,6 +45,9 @@ with st.sidebar:
         key="client_secret",
         on_change=setup_credentials,
     )
+    st.markdown(
+        "🔑 Need credentials? See the [authentication documentation](https://github.com/sdelgadoc/AdminGPT?tab=readme-ov-file#3-generate-an-openai-api-key)."
+    )
     debug = st.toggle("Debug model?")
     if not (openai_api_key and client_id and client_secret):
         st.warning("Please enter your credentials!", icon="⚠️")
