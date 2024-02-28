@@ -44,8 +44,8 @@ def streamlit_consent_input_token(consent_url):
     )
 
     st.write(response)
-    message = {"role": "assistant", "content": response}
-    st.session_state.messages.append(message)
+    # message = {"role": "assistant", "content": response}
+    # st.session_state.messages.append(message)
 
     st.text_input("Input token", key="token", on_change=authenticate_token)
 
