@@ -123,8 +123,7 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                     output = o365parse_proposed_times(
                         **function_arguments,
                         client=client,
-                        model=model,
-                        interface=interface
+                        model=model
                     )
                 elif function_name == "o365send_message":
                     output = o365send_message(**function_arguments, interface=interface)
@@ -136,7 +135,7 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                     )
                 elif function_name == "o365find_free_time_slots":
                     output = o365find_free_time_slots(
-                        **function_arguments, interface=interface
+                        **function_arguments
                     )
 
                 # Clean the function output into JSON-like output
