@@ -13,12 +13,11 @@ from tools.o365_toolkit import (
     tools,
 )
 from tools.utils import authenticate
-from globals import st
 
 
-def create_client(debug=False, model=None):
+def create_client(debug=False, model=None, interface="cli"):
     # Retrieve user information
-    account = authenticate()
+    account = authenticate(interface=interface)
     mailbox = account.mailbox()
     mailboxsettings = mailbox.get_settings()
     timezone = mailboxsettings.timezone
@@ -88,7 +87,7 @@ def run_prompt(prompt, client, assistant, thread):
     return run
 
 
-def poll_for_response(client, thread, run, model, debug=False):
+def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
     LOOP_DELAY_SECONDS = 3
 
     while True:
@@ -111,23 +110,34 @@ def poll_for_response(client, thread, run, model, debug=False):
 
                 # Case statement to execute each toolkit function
                 if function_name == "o365search_emails":
-                    output = o365search_emails(**function_arguments)
+                    output = o365search_emails(
+                        **function_arguments, interface=interface
+                    )
                 elif function_name == "o365search_email":
-                    output = o365search_email(**function_arguments)
+                    output = o365search_email(**function_arguments, interface=interface)
                 elif function_name == "o365search_events":
-                    output = o365search_events(**function_arguments)
+                    output = o365search_events(
+                        **function_arguments, interface=interface
+                    )
                 elif function_name == "o365parse_proposed_times":
                     output = o365parse_proposed_times(
-                        **function_arguments, client=client, model=model
+                        **function_arguments,
+                        client=client,
+                        model=model,
+                        interface=interface
                     )
                 elif function_name == "o365send_message":
-                    output = o365send_message(**function_arguments)
+                    output = o365send_message(**function_arguments, interface=interface)
                 elif function_name == "o365send_event":
-                    output = o365send_event(**function_arguments)
+                    output = o365send_event(**function_arguments, interface=interface)
                 elif function_name == "o365reply_message":
-                    output = o365reply_message(**function_arguments)
+                    output = o365reply_message(
+                        **function_arguments, interface=interface
+                    )
                 elif function_name == "o365find_free_time_slots":
-                    output = o365find_free_time_slots(**function_arguments)
+                    output = o365find_free_time_slots(
+                        **function_arguments, interface=interface
+                    )
 
                 # Clean the function output into JSON-like output
                 output = pprint.pformat(output)

@@ -56,7 +56,7 @@ def streamlit_consent_input_token(consent_url):
     return token
 
 
-def authenticate(streamlit=False):
+def authenticate(interface="cli"):
     """Authenticate using the Microsoft Grah API"""
     try:
         from O365 import Account
@@ -80,7 +80,7 @@ def authenticate(streamlit=False):
     account = Account(credentials)
 
     if account.is_authenticated is False:
-        if streamlit == False:
+        if interface == "cli":
             if not account.authenticate(
                 scopes=[
                     "https://graph.microsoft.com/Mail.ReadWrite",

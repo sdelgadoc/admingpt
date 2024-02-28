@@ -85,7 +85,8 @@ if prompt := st.chat_input(
 client = None
 assistant = None
 thread = None
-model = "gpt-4-1106-preview"
+model = "gpt-4-turbo-preview"
+interface = "streamlit"
 # Generate a new response if last message is not from assistant
 if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
@@ -100,7 +101,8 @@ if st.session_state.messages[-1]["role"] != "assistant":
                     st.session_state.client,
                     st.session_state.assistant,
                     st.session_state.thread,
-                ) = create_client(debug, model)
+                ) = create_client(debug, model, interface)
+
                 with open("coaching_data.txt", "r") as file:
                     coaching_prompt = file.read()
 
@@ -112,7 +114,12 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 )
 
                 response = poll_for_response(
-                    st.session_state.client, st.session_state.thread, run, model, debug
+                    st.session_state.client,
+                    st.session_state.thread,
+                    run,
+                    model,
+                    debug,
+                    interface,
                 )
 
             run = run_prompt(
@@ -122,7 +129,12 @@ if st.session_state.messages[-1]["role"] != "assistant":
                 st.session_state.thread,
             )
             response = poll_for_response(
-                st.session_state.client, st.session_state.thread, run, model, debug
+                st.session_state.client,
+                st.session_state.thread,
+                run,
+                model,
+                debug,
+                interface,
             )
             st.write(response)
 

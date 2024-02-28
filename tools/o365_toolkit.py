@@ -434,10 +434,12 @@ def o365parse_proposed_times(
     )
 
     response = client.chat.completions.create(
-        messages=[{
-            "role": "user",
-            "content": prompt + " " + email_output,
-        }],
+        messages=[
+            {
+                "role": "user",
+                "content": prompt + " " + email_output,
+            }
+        ],
         model=model,
     )
 
@@ -450,9 +452,10 @@ def o365search_emails(
     max_results: int = 10,
     truncate: bool = True,
     truncate_limit: int = 150,
+    interface="cli",
 ):
     # Get mailbox object
-    account = authenticate()
+    account = authenticate(interface)
     mailbox = account.mailbox()
 
     # Pull the folder if the user wants to search in a folder
@@ -500,11 +503,9 @@ def o365search_emails(
     return output_messages
 
 
-def o365search_email(
-    message_id: str,
-):
+def o365search_email(message_id: str, interface: str = "cli"):
     # Get mailbox object
-    account = authenticate()
+    account = authenticate(interface)
     mailbox = account.mailbox()
 
     message = mailbox.get_message(object_id=message_id)
@@ -541,10 +542,11 @@ def o365search_events(
     max_results: int = 10,
     truncate: bool = True,
     truncate_limit: int = 150,
+    interface: str = "cli",
 ):
     # Get calendar object
     # Get mailbox object
-    account = authenticate()
+    account = authenticate(interface)
     schedule = account.schedule()
     calendar = schedule.get_default_calendar()
 
@@ -595,9 +597,10 @@ def o365send_message(
     cc: [str] = None,
     bcc: [str] = None,
     create_draft: bool = False,
+    interface: str = "cli",
 ):
     # Get mailbox object
-    account = authenticate()
+    account = authenticate(interface)
     mailbox = account.mailbox()
     message = mailbox.new_message()
 
@@ -620,9 +623,11 @@ def o365send_message(
     return output
 
 
-def o365reply_message(message_id: str, body: str, create_draft: bool = False):
+def o365reply_message(
+    message_id: str, body: str, create_draft: bool = False, interface: str = "cli"
+):
     # Get mailbox object
-    account = authenticate()
+    account = authenticate(interface)
     mailbox = account.mailbox()
 
     message = mailbox.get_message(object_id=message_id)
@@ -647,9 +652,10 @@ def o365send_event(
     end_datetime: str,
     body: str = "",
     attendees: [str] = [],
+    interface: str = "cli",
 ):
     # Get calendar object
-    account = authenticate()
+    account = authenticate(interface)
     schedule = account.schedule()
     calendar = schedule.get_default_calendar()
 
@@ -722,18 +728,22 @@ def o365find_free_time_slots(events_json):
         start_time = datetime.strptime(event["start_datetime"], "%Y-%m-%dT%H:%M:%S%z")
         end_time = datetime.strptime(event["end_datetime"], "%Y-%m-%dT%H:%M:%S%z")
         if start_time > last_end_time:
-            free_slots.append({
-                "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                "end_datetime": start_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-            })
+            free_slots.append(
+                {
+                    "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "end_datetime": start_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                }
+            )
         last_end_time = max(last_end_time, end_time)
 
     # Check for free time at the end of the day
     if last_end_time < day_end:
-        free_slots.append({
-            "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-            "end_datetime": day_end.strftime("%Y-%m-%dT%H:%M:%S%z"),
-        })
+        free_slots.append(
+            {
+                "start_datetime": last_end_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                "end_datetime": day_end.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            }
+        )
 
     # Format and output the response
     return json.dumps(free_slots, indent=4)

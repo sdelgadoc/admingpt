@@ -12,7 +12,7 @@ os.environ["CLIENT_SECRET"] = "YOUR CLIENT SECRET"
 # Assign constants
 coaching_loop = True
 debug = False
-model = "gpt-4-1106-preview"
+model = "gpt-4-turbo-preview"
 LOOP_DELAY_SECONDS = 3
 
 # Main loop for the application
