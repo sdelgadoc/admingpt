@@ -49,10 +49,16 @@ def create_client(debug=False, model=None, interface="cli"):
     # Add the debug prompt if user runs with debug
     if debug:
         debug_prompt = (
-            "Keep a record of any feedback requests provided by me"
-            " detailing the prompt and tools calls in case I want to retrieve"
-            " them."
+            "Please remember to track and document all interactions using the following format.\n "
+            + "Start of Interaction: Briefly note the request. Follow these steps:\n"
+            + "Prompt: Briefly describe the user request.\nTool Call: List the function used and key parameters.\n"
+            + "Result: Summarize the result or action taken.\n"
+            + "Repeat as needed for each step in the interaction. Conclude with any noteworthy observations.\n"
+            + "End of Interaction\nIf I request a compilation of these interactions, ensure you're able to share"
+            + " the documented interaction logs accurately and comprehensively, adhering to the detailed format I shared with you."
         )
+        # Use the following prompt to retrieve interactions for debugging:
+        # Can you please provide the documentation for all the (or specify a particular) interaction following the detailed format we established?
     else:
         debug_prompt = ""
     assistant_instructions += debug_prompt
@@ -121,9 +127,7 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                     )
                 elif function_name == "o365parse_proposed_times":
                     output = o365parse_proposed_times(
-                        **function_arguments,
-                        client=client,
-                        model=model
+                        **function_arguments, client=client, model=model
                     )
                 elif function_name == "o365send_message":
                     output = o365send_message(**function_arguments, interface=interface)
@@ -134,9 +138,7 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                         **function_arguments, interface=interface
                     )
                 elif function_name == "o365find_free_time_slots":
-                    output = o365find_free_time_slots(
-                        **function_arguments
-                    )
+                    output = o365find_free_time_slots(**function_arguments)
 
                 # Clean the function output into JSON-like output
                 output = pprint.pformat(output)
