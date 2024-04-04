@@ -242,7 +242,7 @@ tools = [
                         ),
                     },
                 },
-                "required": ["to", "body", "create_draft"],
+                "required": ["to", "subject", "body", "create_draft"],
             },
         },
     },
