@@ -25,6 +25,9 @@ pip install -r requirements.txt
 cd tools
 ```
 
+## Authentication: Generate your Microsoft Graph credentials
+To use this toolkit, you need to set up your credentials explained in the [Microsoft Graph authentication and authorization overview](https://learn.microsoft.com/en-us/graph/auth/). Once you've received a CLIENT_ID and CLIENT_SECRET, you can input them as environmental variables below. You can also use the authentication instructions from the [O365 Python library documentation](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite).
+
 ## Usage
 
 ### 1. Searching Emails
