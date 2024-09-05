@@ -1,390 +1,320 @@
-import json
+import json, openai
 from tools.utils import authenticate, clean_body, UTC_FORMAT
 from datetime import datetime
+from zoneinfo import ZoneInfo
+from pydantic import BaseModel, Field
+from typing import List
+
+toolkit_prompt = """
+1. If you need to extract times from an email or message follow these steps:
+    1.1 DO NOT use the 'o365search_emails' or 'o365search_email' functions to find emails, the email content is in my message to you
+    1.2 If I reference an email, extract proposed times from the most recent email sender, ensuring accuracy and correct time zones.
+        1.2.1 If availability is given for a full day without specific times, assume business hours (08:00:00 to 17:00:00) in their local time zone.
+        1.2.2 For before or after a certain time, also assume the unspecified times fall within business hours (08:00:00 to 17:00:00).
+        1.2.3 If a meeting length is not specified, assume a 1 hour meeting.
+        1.2.4 Only consider specific times proposed by the most recent email sender when extracting time ranges.
+2. If I ask you whether I am free at the times proposed by me or in an email:
+    2.1 Extract the times following all the steps above in steps 1.*.*
+        2.1.1 Once you have the start and end datetimes, call the 'o365find_free_time_slots' functions once for each set of proposed times to find the times that are free on my calendar
+        2.1.2 Only return the business hours where I am free
+3. If I ask you to retrieve or perform a task on someone's most recent email:
+    2.1 Use the 'o365search_emails' funtion to find the 5 most recent emails from the person, and extract the email's 'message_id'
+    2.2 Use the 'o365search_email' function with the correct 'message_id' to extract the email's full content
+4. If I ask you to send an invitation or invite for a time propose by me or in an email:
+    4.1 Extract the times following all the steps above in steps 1.*.*
+    4.2 Extract the attendees to the event from my request and any email information
+    4.3 Call the 'o365send_event' function with the extracted times, extracted attendees, and a relevant subject to send the invivation for the event
+"""
+
+### START TOOL PROTOTYPES HERE
+o365search_emails_description = (
+    "Use this function to quickly identify recent or relevant emails based"
+    " on specific query criteria. It provides an overview of multiple"
+    " emails, including truncated contents. Ideal for initial searches when"
+    " you need to locate one or more emails quickly."
+)
+
+
+class O365SearchEmailsParameters(BaseModel):
+    query: str = Field(
+        ...,
+        description="The Microsoift Graph v1.0 $search query. This is a"
+        " required parameter and doesn't have a default value."
+        " Example filters include from:sender, from:sender,"
+        " to:recipient, subject:subject,"
+        " recipients:list_of_recipients, body:excitement,"
+        " importance:high, received>2022-12-01,"
+        " received<2021-12-01, sent>2022-12-01, sent<2021-12-01,"
+        " hasAttachments:true  attachment:api-catalog.md,"
+        " cc:samanthab@contoso.com, bcc:samanthab@contoso.com,"
+        " body:excitement date range example:"
+        " received:2023-06-08..2023-06-09  matching example:"
+        " from:amy OR from:david. Character '\"' is not valid for queries.",
+    )
+    folder: str = Field(
+        ...,
+        description=" If the user wants to search in only one folder, the name"
+        ' of the folder. Possible folders are "inbox", "drafts",'
+        ' "sent items", "deleted items", but users can search'
+        ' custom folders as well. The default value for this parameter is "inbox".',
+    )
+    max_results: int = Field(
+        ...,
+        description="The maximum number of results to return. The default value for this parameter is 10.",
+    )
+
+
+o365search_email_description = (
+    "Use this function when you need to retrieve the full and detailed"
+    " content of a specific email, identified by its `message_id`. This is"
+    " essential when complete information is required for thorough"
+    " analysis, as in the case of identifying proposed meeting times,"
+    " reading complete attachments, or understanding the full context of"
+    " the email. Employ this function after identifying the email of"
+    " interest using the o365search_emails function."
+)
+
+
+class O365SearchEmailParameters(BaseModel):
+    message_id: str = Field(
+        ...,
+        description="The message_id for the email you want to retrieve from the o365search_emails function.",
+    )
+
+
+o365parse_proposed_times_description = (
+    "ALWAYS use this tool if you need to determine when someone is"
+    " proposing a meeting or event in an email. This tool parses out the"
+    " proposed times in an email's full and complete output content, and"
+    " returns the proposed times in a JSON format."
+)
+
+
+class O365ProposedTimesParameters(BaseModel):
+    email_output: str = Field(
+        ...,
+        description=" All the data including the from, subject, body, date, to,"
+        " and cc data for the email. Ensure that no part of the"
+        " email information is omitted to accurately extract"
+        " proposed meeting times.",
+    )
+
+
+o365find_free_time_slots_description = (
+    "ALWAYS use this tool to determine when the user is free, open, or"
+    " available by analyzing the calendar events between a start and end datetime. This tool"
+    " accepts a start and end datetime for which you want to know if I am free. The output is a list of event with each free"
+    " slot's start and end times, which can be conveyed to the user for scheduling and meeting planning."
+)
+
+
+class O365FindFreeTimeSlotsParameters(BaseModel):
+    start_datetime: str = Field(
+        ...,
+        description="Start time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+    )
+    end_datetime: str = Field(
+        ...,
+        description="End time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+    )
+
+
+o365search_events_description = (
+    " Use this tool to search for the user's calendar events. The input"
+    " must be the start and end datetimes for the search query in ISO 8601 format with the correct UTC offset. The output"
+    " is a JSON list of all the events in the user's calendar between the"
+    " start and end times. You can assume that the user can  not schedule"
+    " any meeting over existing meetings, and that the user is busy during"
+    " meetings. Any times without events are free for the user. ALWAYS"
+    " respond with values for all parameters in this tool."
+)
+
+
+class O365SearchEventsParameters(BaseModel):
+    start_datetime: str = Field(
+        ...,
+        description="Start time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+    )
+    end_datetime: str = Field(
+        ...,
+        description="End time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+    )
+    max_results: int = Field(
+        ...,
+        description="The maximum number of results to return. The default value for this parameter is 10.",
+    )
+    truncate: bool = Field(
+        ...,
+        description="Whethere to truncate the results to reduce the size of the response.",
+    )
+
+
+o365reply_message_description = (
+    "This function replies or creates reply drafts to existing emails. Do"
+    " not reply to an email unless the user gives a clear directive to do"
+    " so. The function can either send emails immediately or create drafts"
+    " for later review, based on a boolean parameter."
+)
+
+
+class O365ReplyMesssageParameters(BaseModel):
+    message_id: str = Field(
+        ...,
+        description="The message_id for the email you want to reply to.",
+    )
+    body: str = Field(
+        ...,
+        description="The HTML formatted content of the message body to be sent."
+        " Ensure that paragraphs are separated by additional blank"
+        " lines for enhanced readability and visual appeal. Use"
+        " `<p></p>` tags for each paragraph and insert `<br>` tags"
+        " in between paragraphs to create the desired spacing. For"
+        " example: `<p>Hi [Recipient],</p><p>This is the"
+        " first line or paragraph.</p><p>This is the last"
+        " line or"
+        " paragraph.</p><br><pBest,</p><p>[Your Name]</p><br>'",
+    )
+    create_draft: bool = Field(
+        ...,
+        description="A boolean parameter (true/false). If set to `true`, the"
+        " function creates an email draft that can be reviewed by"
+        " the user without sending. If set to `false`, or is"
+        " omitted, the email is sent immediately upon executing the"
+        " function.",
+    )
+
+
+o365send_message_description = (
+    "This function sends or creates drafts of new emails. Do not send an"
+    " email unless the user gives a clear directive to do so. The function"
+    " can either send emails immediately or create drafts for later review,"
+    " based on a boolean parameter."
+)
+
+
+class O365SendMesssageParameters(BaseModel):
+    body: str = Field(
+        ...,
+        description="The HTML formatted content of the message body to be sent."
+        " Ensure that paragraphs are separated by additional blank"
+        " lines for enhanced readability and visual appeal. Use"
+        " `<p></p>` tags for each paragraph and insert `<br>` tags"
+        " in between paragraphs to create the desired spacing. For"
+        " example: `<p>Hi [Recipient],</p><p>This is the"
+        " first line or paragraph.</p><p>This is the last"
+        " line or"
+        " paragraph.</p><br><pBest,</p><p>[Your Name]</p><br>'",
+    )
+    to: List[str] = Field(
+        ...,
+        description="An list of the recipients' email addresses, each"
+        " representing a recipient of the message.",
+    )
+    subject: str = Field(
+        ...,
+        description="The subject of the message.",
+    )
+    cc: List[str] = Field(
+        ...,
+        description="A list of the CC recipients' email addresses, each"
+        " representing a recipient of the message.",
+    )
+    bcc: List[str] = Field(
+        ...,
+        description="A list of the BCC recipients' email addresses, each"
+        " representing a recipient of the message.",
+    )
+    create_draft: bool = Field(
+        ...,
+        description="A boolean parameter (true/false). If set to `true`, the"
+        " function creates an email draft that can be reviewed by"
+        " the user without sending. If set to `false`, or is"
+        " omitted, the email is sent immediately upon executing the"
+        " function.",
+    )
+
+
+o365send_event_description = (
+    "This function sends a new event. Do not send an"
+    " event unless the user gives a clear directive to do so."
+)
+
+
+class O365SendEventParameters(BaseModel):
+    body: str = Field(
+        ...,
+        description="The message body to include in the event.",
+    )
+    attendees: List[str] = Field(
+        ...,
+        description="A list of the recipients' email addresses, each"
+        " representing a recipient of the message.",
+    )
+    subject: str = Field(
+        ...,
+        description="The subject of the event.",
+    )
+    start_datetime: str = Field(
+        ...,
+        description=" The start datetime for the event in the following format:"
+        '  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
+        " and time  components, and the time zone offset is"
+        " specified as ±hh:mm.  For example:"
+        ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
+        " at 10:30 AM in a time zone with a positive offset of 3 "
+        " hours from Coordinated Universal Time (UTC).",
+    )
+    end_datetime: str = Field(
+        ...,
+        description=" The end datetime for the event in the following format:"
+        '  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
+        " and time  components, and the time zone offset is"
+        " specified as ±hh:mm.  For example:"
+        ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
+        " at 10:30 AM in a time zone with a positive offset of 3 "
+        " hours from Coordinated Universal Time (UTC).",
+    )
+
+
+### END TOOL PROTOTYPES HERE
+
 
 tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "o365search_emails",
-            "description": (
-                "Use this function to quickly identify recent or relevant emails based"
-                " on specific query criteria. It provides an overview of multiple"
-                " emails, including truncated contents. Ideal for initial searches when"
-                " you need to locate one or more emails quickly. Note that details may"
-                " be omitted, so it's advisable to use `functions.o365search_email`"
-                " following this function to read the complete message when detailed"
-                " information is needed, such as for parsing meeting times or reading"
-                " attachments. The input must be a valid Microsoft Graph v1.0 $search"
-                " query. ALWAYS respond with values for all parameters in this tool."
-                " The output is a JSON list of the requested resource."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "folder": {
-                        "type": "string",
-                        "description": (
-                            " If the user wants to search in only one folder, the name"
-                            ' of the folder. Default folders are "inbox", "drafts",'
-                            ' "sent items", "deleted items", but users can search'
-                            " custom folders as well. The default value for this"
-                            ' parameter is "inbox"'
-                        ),
-                    },
-                    "query": {
-                        "type": "string",
-                        "description": (
-                            "The Microsoift Graph v1.0 $search query. This is a"
-                            " required parameter and doesn't have a default value."
-                            " Example filters include from:sender, from:sender,"
-                            " to:recipient, subject:subject,"
-                            " recipients:list_of_recipients, body:excitement,"
-                            " importance:high, received>2022-12-01,"
-                            " received<2021-12-01, sent>2022-12-01, sent<2021-12-01,"
-                            " hasAttachments:true  attachment:api-catalog.md,"
-                            " cc:samanthab@contoso.com, bcc:samanthab@contoso.com,"
-                            " body:excitement date range example:"
-                            " received:2023-06-08..2023-06-09  matching example:"
-                            " from:amy OR from:david."
-                        ),
-                    },
-                    "max_results": {
-                        "type": "integer",
-                        "description": (
-                            "The maximum number of results to return. The default value"
-                            " for this parameter is 10."
-                        ),
-                    },
-                },
-                "required": ["query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365search_email",
-            "description": (
-                "Use this function when you need to retrieve the full and detailed"
-                " content of a specific email, identified by its `message_id`. This is"
-                " essential when complete information is required for thorough"
-                " analysis, as in the case of identifying proposed meeting times,"
-                " reading complete attachments, or understanding the full context of"
-                " the email. Employ this function after identifying the email of"
-                " interest with `functions.o365search_emails` ALWAYS respond with"
-                " values for all parameters in this tool. The output is a JSON list of"
-                " the requested resource."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message_id": {
-                        "type": "string",
-                        "description": (
-                            "The message_id for the email you want to retrieve. ALWAYS"
-                            " respond with values for all parameters in this tool."
-                        ),
-                    },
-                },
-                "required": ["message_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365search_events",
-            "description": (
-                " Use this tool to search for the user's calendar events. The input"
-                " must be the start and end datetimes for the search query. The output"
-                " is a JSON list of all the events in the user's calendar between the"
-                " start and end times. You can assume that the user can  not schedule"
-                " any meeting over existing meetings, and that the user is busy during"
-                " meetings. Any times without events are free for the user. ALWAYS"
-                " respond with values for all parameters in this tool. The output is a"
-                " JSON list of the requested resource."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "start_datetime": {
-                        "type": "string",
-                        "description": (
-                            " The start datetime for the search query in the following"
-                            ' format:  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates'
-                            " the date and time  components, and the time zone offset"
-                            " is specified as ±hh:mm.  For example:"
-                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
-                            " at 10:30 AM in a time zone with a positive offset of 3 "
-                            " hours from Coordinated Universal Time (UTC)."
-                        ),
-                    },
-                    "end_datetime": {
-                        "type": "string",
-                        "description": (
-                            " The end datetime for the search query in the following"
-                            ' format:  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates'
-                            " the date and time  components, and the time zone offset"
-                            " is specified as ±hh:mm.  For example:"
-                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
-                            " at 10:30 AM in a time zone with a positive offset of 3 "
-                            " hours from Coordinated Universal Time (UTC)."
-                        ),
-                    },
-                    "max_results": {
-                        "type": "integer",
-                        "description": (
-                            "The maximum number of results to return. The default value"
-                            " for this parameter is 10."
-                        ),
-                    },
-                    "truncate": {
-                        "type": "boolean",
-                        "description": (
-                            "Whethere to truncate the results in order to meet your"
-                            " token limits"
-                        ),
-                    },
-                },
-                "required": ["message_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365parse_proposed_times",
-            "description": (
-                "ALWAYS use this tool if you need to determine when someone is"
-                " proposing a meeting or event in an email. This tool parses out the"
-                " proposed times in an email's full and complete output content, and"
-                " returns the proposed times in a JSON format."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "email_output": {
-                        "type": "string",
-                        "description": (
-                            "A JSON string with the the from, subject, body, date, to,"
-                            " and cc data for the email. Ensure that no part of the"
-                            " email information is omitted to accurately extract"
-                            " proposed meeting times."
-                        ),
-                    },
-                },
-                "required": ["email_content"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365send_message",
-            "description": (
-                "This function sends or creates drafts of new emails. Do not send an"
-                " email unless the user gives a clear directive to do so. The function"
-                " can either send emails immediately or create drafts for later review,"
-                " based on a boolean parameter."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "body": {
-                        "type": "string",
-                        "description": (
-                            "The HTML formatted content of the message body to be sent."
-                            " Ensure that paragraphs are separated by additional blank"
-                            " lines for enhanced readability and visual appeal. Use"
-                            " `<p></p>` tags for each paragraph and insert `<br>` tags"
-                            " in between paragraphs to create the desired spacing. For"
-                            " example: `<p>Dear Recipient,</p><p>This is the"
-                            " first line or paragraph.</p><p>This is the last"
-                            " line or"
-                            " paragraph.</p><br><p>Regards,</p><p>Sender"
-                            " Name</p><br>'"
-                        ),
-                    },
-                    "to": {
-                        "type": "string",
-                        "description": (
-                            "An array of the recipients' email addresses, each"
-                            " representing a recipient of the message."
-                        ),
-                    },
-                    "subject": {
-                        "type": "string",
-                        "description": "The subject of the message.",
-                    },
-                    "cc": {
-                        "type": "string",
-                        "description": (
-                            "An array of the CC recipients' email addresses, each"
-                            " representing a recipient of the message."
-                        ),
-                    },
-                    "bcc": {
-                        "type": "string",
-                        "description": (
-                            "An array of the BCC recipients' email addresses, each"
-                            " representing a recipient of the message."
-                        ),
-                    },
-                    "create_draft": {
-                        "type": "boolean",
-                        "description": (
-                            "A boolean parameter (true/false). If set to `true`, the"
-                            " function creates an email draft that can be reviewed by"
-                            " the user without sending. If set to `false`, or is"
-                            " omitted, the email is sent immediately upon executing the"
-                            " function."
-                        ),
-                    },
-                },
-                "required": ["to", "subject", "body", "create_draft"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365reply_message",
-            "description": (
-                "This function replies or creates reply drafts to existing emails. Do"
-                " not reply to an email unless the user gives a clear directive to do"
-                " so. The function can either send emails immediately or create drafts"
-                " for later review, based on a boolean parameter."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message_id": {
-                        "type": "string",
-                        "description": (
-                            "The message_id for the email you want to reply to."
-                        ),
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": (
-                            "The HTML formatted content of the message body to be sent."
-                            " Ensure that paragraphs are separated by additional blank"
-                            " lines for enhanced readability and visual appeal. Use"
-                            " `<p></p>` tags for each paragraph and insert `<br>` tags"
-                            " in between paragraphs to create the desired spacing. For"
-                            " example: `<p>Dear Recipient,</p><p>This is the"
-                            " first line or paragraph.</p><p>This is the last"
-                            " line or"
-                            " paragraph.</p><br><p>Regards,</p><p>Sender"
-                            " Name</p><br>'"
-                        ),
-                    },
-                    "create_draft": {
-                        "type": "boolean",
-                        "description": (
-                            "A boolean parameter (true/false). If set to `true`, the"
-                            " function creates an email draft that can be reviewed by"
-                            " the user without sending. If set to `false`, or is"
-                            " omitted, the email is sent immediately upon executing the"
-                            " function."
-                        ),
-                    },
-                },
-                "required": ["message_id", "body", "create_draft"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365send_event",
-            "description": (
-                "Use this tool to compose and send a new email using the provided"
-                " message fields. Only execute this function when you intend to send"
-                " the email immediately, as this will dispatch the email as soon as the"
-                " function is run. fields."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "body": {
-                        "type": "string",
-                        "description": "The message body to include in the event.",
-                    },
-                    "attendees": {
-                        "type": "string",
-                        "description": (
-                            "An array of the recipients' email addresses, each"
-                            " representing a recipient of the event."
-                        ),
-                    },
-                    "subject": {
-                        "type": "string",
-                        "description": "The subject of the event.",
-                    },
-                    "start_datetime": {
-                        "type": "string",
-                        "description": (
-                            " The start datetime for the event in the following format:"
-                            '  YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
-                            " and time  components, and the time zone offset is"
-                            " specified as ±hh:mm.  For example:"
-                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
-                            " at 10:30 AM in a time zone with a positive offset of 3 "
-                            " hours from Coordinated Universal Time (UTC)."
-                        ),
-                    },
-                    "end_datetime": {
-                        "type": "string",
-                        "description": (
-                            " The end datetime for the event in the following format: "
-                            ' YYYY-MM-DDTHH:MM:SS±hh:mm, where "T" separates the date'
-                            " and time  components, and the time zone offset is"
-                            " specified as ±hh:mm.  For example:"
-                            ' "2023-06-09T10:30:00+03:00" represents June 9th,  2023,'
-                            " at 10:30 AM in a time zone with a positive offset of 3 "
-                            " hours from Coordinated Universal Time (UTC)."
-                        ),
-                    },
-                },
-                "required": ["subject", "start_datetime", "end_datetime"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "o365find_free_time_slots",
-            "description": (
-                "ALWAYS use this tool to determine when the user is free, open, or"
-                " available by analyzing the calendar events for the day. This tool"
-                " processes a day's event schedule from a JSON string and finds free"
-                " time slots. The output is a JSON string with each free slot's start"
-                " and end times, which can be conveyed to the user for scheduling and"
-                " meeting planning. Remember to use this function whenever you need to"
-                " provide a list of free time slots for a given date."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "events_json": {
-                        "type": "string",
-                        "description": (
-                            "A JSON string containing an array of event objects. Each"
-                            " event object should include 'start_datetime' and"
-                            " 'end_datetime' fields specifying the event's start and"
-                            " end times in ISO 8601 format. The events should represent"
-                            " a single day's schedule. The function will use the date"
-                            " of the first event to determine the day for which to find"
-                            " free time slots."
-                        ),
-                    },
-                },
-                "required": ["events_json"],
-            },
-        },
-    },
+    openai.pydantic_function_tool(
+        O365SearchEmailsParameters,
+        name="o365search_emails",
+        description=o365search_emails_description,
+    ),
+    openai.pydantic_function_tool(
+        O365SearchEmailParameters,
+        name="o365search_email",
+        description=o365search_email_description,
+    ),
+    openai.pydantic_function_tool(
+        O365FindFreeTimeSlotsParameters,
+        name="o365find_free_time_slots",
+        description=o365find_free_time_slots_description,
+    ),
+    openai.pydantic_function_tool(
+        O365SearchEventsParameters,
+        name="o365search_events",
+        description=o365search_events_description,
+    ),
+    openai.pydantic_function_tool(
+        O365ReplyMesssageParameters,
+        name="o365reply_message",
+        description=o365reply_message_description,
+    ),
+    openai.pydantic_function_tool(
+        O365SendMesssageParameters,
+        name="o365send_message",
+        description=o365send_message_description,
+    ),
+    openai.pydantic_function_tool(
+        O365SendEventParameters,
+        name="o365send_event",
+        description=o365send_event_description,
+    ),
 ]
 
 
@@ -393,57 +323,50 @@ def o365parse_proposed_times(
     client: object,
     model: str,
 ):
+    class Emails(BaseModel):
+        class ProposedTimes(BaseModel):
+            class TimeRange(BaseModel):
+                start_time: str = Field(
+                    ...,
+                    description="Start time in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+                )
+                end_time: str = Field(
+                    ...,
+                    description="End time in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00'). ALWAYS include an end time.",
+                )
+
+            proposed_times: list[TimeRange] = Field(
+                ...,
+                description="An email's List of proposed times containing containing TimeRanges",
+            )
+
+        emails: list[ProposedTimes] = Field(
+            ..., description="List of emails containing ProposedTimes"
+        )
+
     prompt = (
-        "Given the email content provided, your task is to identify all the proposed"
-        " times for a potential meeting as indicated by the sender of the most recent"
-        " email. Extract these times and convert them into a structured format. Do not"
-        " provide any explanations, context, or additional text outside of the JSON"
-        " structure. The structured data should be presented in JSON format as shown"
-        " below. Ensure that the dates and times are accurate based on the information"
-        " provided in the email.\n\nImportant:\n\nIf the sender specifies a day or days"
-        " without indicating specific times, assume they are referring to standard"
-        " business hours between 8:00 a.m. and 5:00 p.m.\nSpecify the time zone for"
-        " each proposed meeting time. If the email content does not specify a time"
-        " zone, assume that all times refer to Eastern Time (ET).\nIf any participant"
-        " expresses a preference for or against certain days or times, adjust the"
-        " proposed times accordingly.\n\nPlease use the following JSON structure for"
-        ' your response:\n\n{\n  "proposed_times": [\n    {\n      "start_time":'
-        ' "[Start Time in ISO 8601 Format]", // An example would be "start_time":'
-        ' "2023-06-09T11:00:00-04:00"\n      "end_time": "[End Time in ISO 8601'
-        ' Format]", // An example would be "end_time": "2023-06-09T13:00:00-04:00"\n   '
-        '   "time_zone": "[Time Zone in Standard Format]" // An example would be'
-        ' "time_zone": "America/New_York"\n    },\n    ... [additional times, if any]\n'
-        "  ]\n}\nInstructions:\n\n- Maintain the integrity of the JSON structure"
-        " provided. Do not include explanations or any additional text outside of the"
-        " JSON structure.- Replace placeholder text (e.g., '[Start Time in ISO 8601"
-        " Format]') with actual information extracted from the email, including a"
-        " specific date if mentioned.- Ensure the 'start_time' and 'end_time' are"
-        " in the correct ISO 8601 format, and include the relevant date along with the"
-        " time.- Clearly indicate the 'time_zone' if specified. If not specified in"
-        " the email, use 'America/New_York' to represent Eastern Time.-"
-        " Cross-reference the proposed times with the context supplied in the email,"
-        " such as previous email dates or specific days of the week mentioned, to"
-        " determine the correct meeting date.- Do not add any assumptions or make"
-        " changes that are not supported by the content of the email. Only assume"
-        " standard business hours if specific times are not mentioned, ensuring they"
-        " are associated with the correct day.- Pay special attention to any details in"
-        " the email that specify or hint at a meeting date, especially if linked to the"
-        " days of the week or if it is in response to previous messages. Verify these"
-        " details to ensure the proposed dates and times match the sender's"
-        " intent.Email Content:\n\n"
+        "You are a helpful assistant that extracts proposed times from the most recent email sender, "
+        " ensuring accuracy and correct time zones. If availability is given for a full day without "
+        " specific times, assume business hours (08:00:00 to 17:00:00) in their local time zone. For "
+        " before or after a certain time, also assume the unspecified times fall within business hours "
+        " (08:00:00 to 17:00:00). If a meeting length is not specified, assume a 1 hour meeting. Only "
+        " consider specific times proposed by the most recent email sender when extracting time ranges. "
+        " If you are unclear about the sender's local time zone, assume it is (UTC-4)."
     )
 
-    response = client.chat.completions.create(
+    response = client.beta.chat.completions.parse(
+        model=model,
         messages=[
             {
                 "role": "user",
                 "content": prompt + " " + email_output,
             }
         ],
-        model=model,
+        response_format=Emails,
+        temperature=0.2,
     )
 
-    return response.choices[0].message.content.strip()
+    return response.choices[0].message.parsed.emails.strip()
 
 
 def o365search_emails(
@@ -592,10 +515,10 @@ def o365search_events(
 
 def o365send_message(
     body: str,
-    to: [str],
+    to: List[str],
     subject: str,
-    cc: [str] = None,
-    bcc: [str] = None,
+    cc: List[str] = None,
+    bcc: List[str] = None,
     create_draft: bool = False,
     interface: str = "cli",
 ):
@@ -624,7 +547,11 @@ def o365send_message(
 
 
 def o365reply_message(
-    message_id: str, body: str, create_draft: bool = False, interface: str = "cli"
+    message_id: str,
+    body: str,
+    create_draft: bool = False,
+    interface: str = "cli",
+    reply_to_sender=False,
 ):
     # Get mailbox object
     account = authenticate(interface)
@@ -635,6 +562,9 @@ def o365reply_message(
 
     # Assign message body value
     reply_message.body = body
+    # Override 'to' field to the sender if necessary
+    if reply_to_sender:
+        reply_message.to.add(reply_message.sender)
 
     if create_draft:
         reply_message.save_draft()
@@ -651,7 +581,7 @@ def o365send_event(
     start_datetime: str,
     end_datetime: str,
     body: str = "",
-    attendees: [str] = [],
+    attendees: List[str] = [],
     interface: str = "cli",
 ):
     # Get calendar object
@@ -663,8 +593,14 @@ def o365send_event(
 
     event.body = body
     event.subject = subject
-    event.start = datetime.strptime(start_datetime, UTC_FORMAT)
-    event.end = datetime.strptime(end_datetime, UTC_FORMAT)
+    # Parse the start time string into a datetime object with time zone information
+    dt = datetime.strptime(start_datetime, UTC_FORMAT)
+    # Convert the start time to UTC
+    event.start = dt.astimezone(ZoneInfo("UTC"))
+    # Do the same for event.end
+    dt = datetime.strptime(end_datetime, UTC_FORMAT)
+    event.end = dt.astimezone(ZoneInfo("UTC"))
+
     for attendee in attendees:
         event.attendees.add(attendee)
 
@@ -675,49 +611,33 @@ def o365send_event(
     return output
 
 
-def o365find_free_time_slots(events_json):
+def o365find_free_time_slots(start_datetime, end_datetime):
     """
-    Processes a JSON string of scheduled events and returns a list of free time slots within the day.
+    Identifies and returns a list of available free time slots within a specified date and time range.
 
     Parameters:
-    events_json (str): A JSON string containing scheduled events, each with a start and end datetime.
+    start_datetime (str): A string in ISO 8601 format "YYYY-MM-DDTHH:MM:SS±HH:MM" representing the start of the time range.
+    end_datetime (str): A string in ISO 8601 format "YYYY-MM-DDTHH:MM:SS±HH:MM" representing the end of the time range.
 
     Returns:
-    str: A JSON string representing free time slots in the day.
-
-    Note:
-    This function was developed 100% by the OpenAI API with minimal huma intervention
+    str: A JSON string representing a list of free time slots within the specified range. Each slot includes a start_datetime and end_datetime.
+         If there are no free time slots, returns a message indicating that there are no available free times.
     """
 
-    # Parse the input data, and return an error if the input is in the incorrect format
-    try:
-        events = json.loads(events_json)
-    except json.decoder.JSONDecodeError as e:
-        error = (
-            "ERROR: When parsing the data in the events_json parameters, the json.loads"
-            " Python function returned the following json.decoder.JSONDecodeError ("
-            + str(e)
-            + "). Please review the events_json parameter based on this feedback and"
-            " run the function again."
+    events = o365search_events(start_datetime, end_datetime)
+
+    if not events:
+        # If there are no events, return the entire time
+        return json.dumps(
+            [{"start_datetime": start_datetime, "end_datetime": end_datetime}], indent=4
         )
-        return error
 
     # Sort events based on start time
     events.sort(key=lambda x: x["start_datetime"])
 
-    # Extract the date from the first event to set day_start and day_end
-    first_event_date = datetime.strptime(
-        events[0]["start_datetime"], "%Y-%m-%dT%H:%M:%S%z"
-    ).date()
-    first_event_tzinfo = datetime.strptime(
-        events[0]["start_datetime"], "%Y-%m-%dT%H:%M:%S%z"
-    ).tzinfo
-    day_start = datetime.combine(
-        first_event_date, datetime.min.time(), tzinfo=first_event_tzinfo
-    )
-    day_end = datetime.combine(
-        first_event_date, datetime.max.time(), tzinfo=first_event_tzinfo
-    )
+    # Set day start and end times
+    day_start = datetime.strptime(start_datetime, "%Y-%m-%dT%H:%M:%S%z")
+    day_end = datetime.strptime(end_datetime, "%Y-%m-%dT%H:%M:%S%z")
 
     # Initialize variables
     last_end_time = day_start
@@ -727,6 +647,7 @@ def o365find_free_time_slots(events_json):
     for event in events:
         start_time = datetime.strptime(event["start_datetime"], "%Y-%m-%dT%H:%M:%S%z")
         end_time = datetime.strptime(event["end_datetime"], "%Y-%m-%dT%H:%M:%S%z")
+
         if start_time > last_end_time:
             free_slots.append(
                 {
@@ -734,6 +655,7 @@ def o365find_free_time_slots(events_json):
                     "end_datetime": start_time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                 }
             )
+
         last_end_time = max(last_end_time, end_time)
 
     # Check for free time at the end of the day
@@ -746,4 +668,7 @@ def o365find_free_time_slots(events_json):
         )
 
     # Format and output the response
-    return json.dumps(free_slots, indent=4)
+    if free_slots == []:
+        return "There are no free times for this search"
+    else:
+        return json.dumps(free_slots, indent=4)

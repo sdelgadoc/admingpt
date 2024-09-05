@@ -11,6 +11,7 @@ from tools.o365_toolkit import (
     o365send_event,
     o365find_free_time_slots,
     tools,
+    toolkit_prompt,
 )
 from tools.utils import authenticate
 
@@ -42,8 +43,9 @@ def create_client(debug=False, model=None, interface="cli"):
         + timezone
         + " timezone. You have access to my email and calendar. Today is "
         + formatted_date
-        + ". ALWAYS use functions for determining free times and parsing proposed"
-        " meeting times in emails."
+        + ". ALWAYS use available functions to determine "
+        + "whether I am available at a certain time in my caledar.\n"
+        + toolkit_prompt
     )
 
     # Add the debug prompt if user runs with debug
@@ -89,6 +91,7 @@ def run_prompt(prompt, client, assistant, thread):
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant.id,
+        temperature=0.2,
     )
     return run
 

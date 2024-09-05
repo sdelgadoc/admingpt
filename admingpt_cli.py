@@ -10,19 +10,18 @@ os.environ["CLIENT_ID"] = "YOUR CLIENT ID"
 os.environ["CLIENT_SECRET"] = "YOUR CLIENT SECRET"
 
 # Assign constants
-coaching_loop = True
+first_loop = True
 debug = False
-model = "gpt-4-turbo-preview"
+model = "gpt-4o-2024-08-06"
 LOOP_DELAY_SECONDS = 3
 
 # Main loop for the application
 while True:
-    # If it's the first loop, coach the Assistant, otherwise request prompt
-    if coaching_loop:
-        coaching_loop = False
-        # Open the file and read its contents
-        with open("coaching_data.txt", "r") as file:
-            prompt = file = file.read()
+
+    if first_loop:
+        # Start with a default prompt
+        prompt = 'Confirm you\'re ready by replying, "Hello, [MY FULL NAME]. How can I assist you today?"'
+        first_loop = False
     else:
         prompt = input("Enter your request here: ")
         if prompt.lower() == "stop":
