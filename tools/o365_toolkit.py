@@ -7,23 +7,23 @@ from typing import List
 
 toolkit_prompt = """
 1. If you need to extract times from an email or message follow these steps:
-    1.1 DO NOT use the 'o365search_emails' or 'o365search_email' functions to find emails, the email content is in my message to you
+    1.1 DO NOT use the 'o365search_emails' or 'o365search_email' functions to find emails, the email content is in my message to you.
     1.2 If I reference an email, extract proposed times from the most recent email sender, ensuring accuracy and correct time zones.
         1.2.1 If availability is given for a full day without specific times, assume business hours (08:00:00 to 17:00:00) in their local time zone.
         1.2.2 For before or after a certain time, also assume the unspecified times fall within business hours (08:00:00 to 17:00:00).
         1.2.3 If a meeting length is not specified, assume a 1 hour meeting.
         1.2.4 Only consider specific times proposed by the most recent email sender when extracting time ranges.
 2. If I ask you whether I am free at the times proposed by me or in an email:
-    2.1 Extract the times following all the steps above in steps 1.*.*
-        2.1.1 Once you have the start and end datetimes, call the 'o365find_free_time_slots' functions once for each set of proposed times to find the times that are free on my calendar
-        2.1.2 Only return the business hours where I am free
+    2.1 Extract the times by following all the steps listed under section 1, including any substeps.
+        2.1.1 Once you have the start and end datetimes, call the 'o365find_free_time_slots' functions once for each set of proposed times to find the times that are free on my calendar.
+        2.1.2 Only return the business hours where I am free.
 3. If I ask you to retrieve or perform a task on someone's most recent email:
-    2.1 Use the 'o365search_emails' funtion to find the 5 most recent emails from the person, and extract the email's 'message_id'
-    2.2 Use the 'o365search_email' function with the correct 'message_id' to extract the email's full content
+    2.1 Use the 'o365search_emails' funtion to find the 5 most recent emails from the person, and extract the email's 'message_id'.
+    2.2 Use the 'o365search_email' function with the correct 'message_id' to extract the email's full content.
 4. If I ask you to send an invitation or invite for a time propose by me or in an email:
-    4.1 Extract the times following all the steps above in steps 1.*.*
-    4.2 Extract the attendees to the event from my request and any email information
-    4.3 Call the 'o365send_event' function with the extracted times, extracted attendees, and a relevant subject to send the invivation for the event
+    4.1 Extract the times by following all the steps listed under section 1, including any substeps.
+    4.2 Extract the attendees to the event from my request and any email information.
+    4.3 Call the 'o365send_event' function with the extracted times, extracted attendees, and a relevant subject to send the invivation for the event.
 """
 
 ### START TOOL PROTOTYPES HERE
