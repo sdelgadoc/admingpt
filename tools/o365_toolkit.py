@@ -15,15 +15,22 @@ toolkit_prompt = """
         1.2.4 Only consider specific times proposed by the most recent email sender when extracting time ranges.
 2. If I ask you whether I am free at the times proposed by me or in an email:
     2.1 Extract the times by following all the steps listed under section 1, including any substeps.
-        2.1.1 Once you have the start and end datetimes, call the 'o365find_free_time_slots' functions once for each set of proposed times to find the times that are free on my calendar.
-        2.1.2 Only return the business hours where I am free.
+    2.2 Once you have the start and end datetimes, call the 'o365find_free_time_slots' functions once for each set of proposed times to find the times that are free on my calendar.
+    2.3 Only return the business hours where I am free.
 3. If I ask you to retrieve or perform a task on someone's most recent email:
     2.1 Use the 'o365search_emails' funtion to find the 5 most recent emails from the person, and extract the email's 'message_id'.
     2.2 Use the 'o365search_email' function with the correct 'message_id' to extract the email's full content.
-4. If I ask you to send an invitation or invite for a time propose by me or in an email:
+4. If I ask you to send an invitation or invite for a time proposed by me or in an email:
     4.1 Extract the times by following all the steps listed under section 1, including any substeps.
     4.2 Extract the attendees to the event from my request and any email information.
     4.3 Call the 'o365send_event' function with the extracted times, extracted attendees, and a relevant subject to send the invivation for the event.
+5. If I ask you to organize a meeting or a call for a time proposed by me or in an email:
+    5.1 Extract the times by following all the steps listed under section 1, including any substeps.
+    5.2 Check whether I am free at the times you extracted by following all the steps listed under section 2, including any substeps.
+    5.3 If I am free at the extracted times:
+        5.3.1 Create an event at the earliest proposed time by following all the steps listed under section 4, including any substeps.
+    5.4 If I am not free at the extracted times:
+        5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
 """
 
 ### START TOOL PROTOTYPES HERE
@@ -604,7 +611,6 @@ def o365send_event(
     for attendee in attendees:
         event.attendees.add(attendee)
 
-    # TO-DO: Look into PytzUsageWarning
     event.save()
 
     output = "Event sent: " + str(event)
