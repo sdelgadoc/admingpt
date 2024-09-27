@@ -8,8 +8,6 @@ from tools.utils import authenticate
 from datetime import datetime as dt
 from openai import OpenAI
 from tools.o365_toolkit import (
-    tools,
-    toolkit_prompt,
     o365search_emails,
     o365search_email,
     o365reply_message,

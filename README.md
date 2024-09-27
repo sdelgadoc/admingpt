@@ -17,9 +17,7 @@ Help shape the future of AdminGPT! Participate in our [feature prioritization po
 
 ## 🔧 Installation
 
-Follow these steps to setup AdminGPT on your system, or if you want to get started more quickly, click on the link below to run AdminGPT in a Streamlit web interface:
-
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_red.svg)](https://admgpt.streamlit.app/)
+Follow these steps to setup AdminGPT on your system:
 
 ### 1. Clone the Repository
 To clone the repository to your local machine, use the following command in your terminal:
