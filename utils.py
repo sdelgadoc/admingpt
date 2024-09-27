@@ -41,17 +41,38 @@ def create_client(debug=False, model=None, interface="cli"):
         + client_email
         + ", and I am in the "
         + timezone
-        + " timezone. You have access to my email and calendar. Today is "
+        + " timezone. Today is "
         + formatted_date
-        + ". ALWAYS use available functions to determine "
-        + "whether I am available at a certain time in my caledar.\n"
-        + toolkit_prompt
+        + "."
+        + "My business hours are between '8:00 a.m.' and '5:30 a.m.' of my time zone. "
+        + "I am not free outside these times, and don't recomment times outside these business hours. "
     )
+
+    # Add the email prompt if the user interacts via email
+    if interface=="email":
+        assistant_instructions = (
+            assistant_instructions
+            + "I will send you requests in an email that start with the phrase 'Hi Monica, '."
+            + "Always respond to my requests either with the answer, or a description of the task you performed after you performed it."
+            + "Respond strictly in HTML. Use `<br>` tags for each paragraph and to create the desired spacing."
+            + "Do not use markdown formatting, code block tags, or any other markup language."
+            + "The following is a valid response example: 'Hi [Recipient],<br><br>This is the first line or paragraph.<br>"
+            + "These are time slots in one day shown in bullet form:<ul><li>8:00 am - 9:00 am EST</li>"
+            + "<li>11:00 am - 1:00 pm EST</li><li>3:00 pm - 4:00 pm EST</li></ul><br>"
+            + "This is the second paragraph with an <i>italicized</i> word. Below are time slots across multiple days.<ul>"
+            + "<li>Thursday, Oct. 3"
+            + "<ul><li>8:00 am - 9:00 am GMT</li><li>11:00 am - 1:00 pm GMT</li><li>3:00 pm - 4:00 pm EST</li>"
+            + "</ul></li><li>Friday, Oct. 4<ul><li>8:00 am - 9:00 am GMT</li><li>11:00 am - 1:00 pm GMT</li>"
+            + "<li>3:00 pm - 4:00 pm GMT</li></ul></li></ul><br>This is the last line or paragraph with a <b>bolded</b> word for emphasis."
+            + "<br><br><br>Best,<br><br>Monica A. Ingenio<br><i>(OpenAI-Powered Assistant in Beta, please excuse any "
+            + "mistakes)</i><br><br>"
+        )
 
     # Add the debug prompt if user runs with debug
     if debug:
-        debug_prompt = (
-            "Please remember to track and document all interactions using the following format.\n "
+        assistant_instructions = (
+            assistant_instructions
+            + "Please remember to track and document all interactions using the following format.\n "
             + "Start of Interaction: Briefly note the request. Follow these steps:\n"
             + "Prompt: Briefly describe the user request.\nTool Call: List the function used and key parameters.\n"
             + "Result: Summarize the result or action taken.\n"
@@ -59,11 +80,9 @@ def create_client(debug=False, model=None, interface="cli"):
             + "End of Interaction\nIf I request a compilation of these interactions, ensure you're able to share"
             + " the documented interaction logs accurately and comprehensively, adhering to the detailed format I shared with you."
         )
-        # Use the following prompt to retrieve interactions for debugging:
-        # Can you please provide the documentation for all the (or specify a particular) interaction following the detailed format we established?
-    else:
-        debug_prompt = ""
-    assistant_instructions += debug_prompt
+
+    # Add the toolkit prompt
+    assistant_instructions = assistant_instructions + toolkit_prompt
 
     client = OpenAI(
         api_key=openai_api_key,

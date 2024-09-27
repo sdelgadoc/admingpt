@@ -29,89 +29,6 @@ current_date = dt.now()
 formatted_date = current_date.strftime("%A, %B %d, %Y")
 openai_api_key = os.environ.get("OPENAI_API_KEY")
 
-
-def create_client(debug=False, model=None, interface="cli"):
-    # Retrieve user information
-    account = authenticate(interface=interface)
-    mailbox = account.mailbox()
-    mailboxsettings = mailbox.get_settings()
-    timezone = mailboxsettings.timezone
-    directory = account.directory(resource="me")
-    user = directory.get_current_user()
-    client_name = user.full_name
-    client_email = user.mail
-
-    # Set values for global variables
-    assistant_instructions = (
-        "You are an AI Administrative Assistant called "
-        + assistant_name
-        + ", and I am your executive. My name is "
-        + client_name
-        + ". My email is "
-        + client_email
-        + ", and I am in the "
-        + timezone
-        + " timezone. Today is "
-        + formatted_date
-        + "."
-        + "My business hours are between '8:00 a.m.' and '5:30 a.m.' of my time zone. "
-        + "I am not free outside these times, and don't recomment times "
-        + "outside these business hours. I will send you requests in "
-        + "an email that start wit the phrase 'Hi Monica, '."
-        + "Always respond to my requests either with the answer, or a description of the task you performed after you performed it."
-        + "Respond strictly in HTML. Use `<br>` tags for each paragraph and to create the desired spacing."
-        + "Do not use markdown formatting, code block tags, or any other markup language."
-        + "The following is a valid response example: 'Hi [Recipient],<br><br>This is the first line or paragraph.<br>"
-        + "These are time slots in one day shown in bullet form:<ul><li>8:00 am - 9:00 am EST</li>"
-        + "<li>11:00 am - 1:00 pm EST</li><li>3:00 pm - 4:00 pm EST</li></ul><br>"
-        + "This is the second paragraph with an <i>italicized</i> word. Below are time slots across multiple days.<ul>"
-        + "<li>Thursday, Oct. 3"
-        + "<ul><li>8:00 am - 9:00 am GMT</li><li>11:00 am - 1:00 pm GMT</li><li>3:00 pm - 4:00 pm EST</li>"
-        + "</ul></li><li>Friday, Oct. 4<ul><li>8:00 am - 9:00 am GMT</li><li>11:00 am - 1:00 pm GMT</li>"
-        + "<li>3:00 pm - 4:00 pm GMT</li></ul></li></ul><br>This is the last line or paragraph with a <b>bolded</b> word for emphasis."
-        + "<br><br><br>Best,<br><br>Monica A. Ingenio<br><i>(OpenAI-Powered Assistant in Beta, please excuse any "
-        + "mistakes)</i><br><br>"
-        + toolkit_prompt
-    )
-
-    # Add the debug prompt if user runs with debug
-    if debug:
-        debug_prompt = (
-            "Please remember to track and document all interactions using the following"
-            " format.\n "
-            + "Start of Interaction: Briefly note the request. Follow these steps:\n"
-            + "Prompt: Briefly describe the user request.\nTool Call: List the function"
-            " used and key parameters.\n"
-            + "Result: Summarize the result or action taken.\n"
-            + "Repeat as needed for each step in the interaction. Conclude with any"
-            " noteworthy observations.\n"
-            + "End of Interaction\nIf I request a compilation of these interactions,"
-            " ensure you're able to share"
-            + " the documented interaction logs accurately and comprehensively,"
-            " adhering to the detailed format I shared with you."
-        )
-        # Use the following prompt to retrieve interactions for debugging:
-        # Can you please provide the documentation for all the (or specify a particular) interaction following the detailed format we established?
-    else:
-        debug_prompt = ""
-    assistant_instructions += debug_prompt
-
-    client = OpenAI(
-        api_key=openai_api_key,
-    )
-
-    assistant = client.beta.assistants.create(
-        name="AI Administrative Assistant",
-        instructions=assistant_instructions,
-        model=model,
-        tools=tools,
-    )
-
-    thread = client.beta.threads.create()
-
-    return client, assistant, thread
-
-
 def get_prompt_email():
 
     # Get the user's email
@@ -129,13 +46,13 @@ def get_prompt_email():
         + assistant_first_name
     )
 
-    events = o365search_emails(query, "inbox", 5)
+    emails = o365search_emails(query, "inbox", 5)
 
-    # Sort events based on start time
-    events.sort(key=lambda x: x["date"], reverse=True)
+    # Sort emails based on start time
+    emails.sort(key=lambda x: x["date"], reverse=True)
 
     # Find full email and return it
-    message_id = events[0]["message_id"]
+    message_id = emails[0]["message_id"]
     event = o365search_email(message_id)
 
     return str(event), message_id
@@ -146,11 +63,9 @@ model = "gpt-4o-2024-08-06"
 
 prompt, message_id = get_prompt_email()
 
-(client, assistant, thread) = create_client(model=model)
+(client, assistant, thread) = create_client(debug=False, model=model, interface="email",)
 run = run_prompt(prompt, client, assistant, thread)
 response = poll_for_response(client, thread, run, model)
-
-print(response)
 
 response = o365reply_message(
     message_id,
@@ -158,3 +73,5 @@ response = o365reply_message(
     interface="cli",
     reply_to_sender=True,
 )
+
+print(response)
