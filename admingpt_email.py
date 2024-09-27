@@ -3,6 +3,7 @@ from utils import (
     create_client,
     run_prompt,
     poll_for_response,
+    assistant_first_name,
 )
 from tools.utils import authenticate
 from datetime import datetime as dt
@@ -20,17 +21,11 @@ os.environ["OPENAI_API_KEY"] = "YOUR OPENAI KEY"
 os.environ["CLIENT_ID"] = "YOUR CLIENT ID"
 # Set your Microsoft Graph client secret
 os.environ["CLIENT_SECRET"] = "YOUR CLIENT SECRET"
-# Set global variables
-assistant_name = "Monica A. Ingenio"
-assistant_first_name = "Monica"
-current_date = dt.now()
-formatted_date = current_date.strftime("%A, %B %d, %Y")
-openai_api_key = os.environ.get("OPENAI_API_KEY")
 
 def get_prompt_email():
 
     # Get the user's email
-    account = authenticate(interface="cli")
+    account = authenticate(interface="email")
     directory = account.directory(resource="me")
     user = directory.get_current_user()
     client_email = user.mail
@@ -68,7 +63,7 @@ response = poll_for_response(client, thread, run, model)
 response = o365reply_message(
     message_id,
     response,
-    interface="cli",
+    interface="email",
     reply_to_sender=True,
 )
 
