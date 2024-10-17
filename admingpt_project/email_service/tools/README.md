@@ -22,7 +22,7 @@ Clone the repository and install the dependencies:
 git clone https://github.com/sdelgadoc/AdminGPT.git
 cd AdminGPT
 pip install -r requirements.txt
-cd tools
+cd admingpt_project/email_serivce/tools
 ```
 
 ## Authentication: Generate your Microsoft Graph credentials
