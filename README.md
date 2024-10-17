@@ -55,7 +55,7 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 
 2. Navigate to the AdminGPT directory using:
 
-   `cd AdminGPT`
+   `cd AdminGPT/admingpt_project`
 
 3. Run the CLI using:
 
@@ -70,8 +70,8 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 ## 📖 Documentation
 Below are documentation resources to help you learn more about AdminGPT, how it was developed, and how to use it.
 
-- [Getting Started Tutorial Notebook:](https://github.com/sdelgadoc/AdminGPT/blob/main/o365_tutorial.ipynb) A step-by-step guide to running AdminGPT, and how it's implemented
-   - You can find the tutorial notebook [here](https://github.com/sdelgadoc/AdminGPT/blob/main/o365_tutorial.ipynb) in this repo. 
+- [Getting Started Tutorial Notebook:](https://github.com/sdelgadoc/admingpt/blob/main/admingpt_project/o365_tutorial.ipynb) A step-by-step guide to running AdminGPT, and how it's implemented
+   - You can find the tutorial notebook [here](https://github.com/sdelgadoc/admingpt/blob/main/admingpt_project/o365_tutorial.ipynb) in this repo. 
 
 ## ❓ Frequently Asked Questions
 Here are some common questions and answers about AdminGPT:
