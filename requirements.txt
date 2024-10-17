@@ -1,3 +1,2 @@
 openai
 O365
-streamlit

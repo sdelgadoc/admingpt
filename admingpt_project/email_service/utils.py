@@ -1,11 +1,10 @@
 import os, pprint, json, time
 from datetime import datetime as dt
 from openai import OpenAI
-from tools.o365_toolkit import (
+from .tools.o365_toolkit import (
     o365search_emails,
     o365search_email,
     o365search_events,
-    o365parse_proposed_times,
     o365send_message,
     o365reply_message,
     o365send_event,
@@ -13,7 +12,11 @@ from tools.o365_toolkit import (
     tools,
     toolkit_prompt,
 )
-from tools.utils import authenticate
+from .tools.utils import authenticate
+
+assistant_first_name = "Monica"
+assistant_last_name = "Ingenio"
+assistant_name = assistant_first_name + " A. " + assistant_last_name
 
 
 def create_client(debug=False, model=None, interface="cli"):
@@ -28,7 +31,6 @@ def create_client(debug=False, model=None, interface="cli"):
     client_email = user.mail
 
     # Set values for global variables
-    assistant_name = "Monica A. Ingenio"
     current_date = dt.now()
     formatted_date = current_date.strftime("%A, %B %d, %Y")
     openai_api_key = os.environ.get("OPENAI_API_KEY")
@@ -49,12 +51,12 @@ def create_client(debug=False, model=None, interface="cli"):
     )
 
     # Add the email prompt if the user interacts via email
-    if interface=="email":
+    if interface == "email":
         assistant_instructions = (
             assistant_instructions
             + "I will send you requests in an email that start with the phrase 'Hi Monica, '."
             + "Always respond to my requests either with the answer, or a description of the task you performed after you performed it."
-            + "Respond strictly in HTML. Use `<br>` tags for each paragraph and to create the desired spacing."
+            + "Respond strictly in HTML using only <br> tags for spacing between paragraphs. Do not use <p> tags for paragraph formatting, as they may not render correctly in email clients."
             + "Do not use markdown formatting, code block tags, or any other markup language."
             + "The following is a valid response example: 'Hi [Recipient],<br><br>This is the first line or paragraph.<br>"
             + "These are time slots in one day shown in bullet form:<ul><li>8:00 am - 9:00 am EST</li>"
@@ -146,10 +148,6 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                 elif function_name == "o365search_events":
                     output = o365search_events(
                         **function_arguments, interface=interface
-                    )
-                elif function_name == "o365parse_proposed_times":
-                    output = o365parse_proposed_times(
-                        **function_arguments, client=client, model=model
                     )
                 elif function_name == "o365send_message":
                     output = o365send_message(**function_arguments, interface=interface)

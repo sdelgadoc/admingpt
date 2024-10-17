@@ -1,5 +1,5 @@
 import json, openai
-from tools.utils import authenticate, clean_body, UTC_FORMAT
+from .utils import authenticate, clean_body, UTC_FORMAT
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from pydantic import BaseModel, Field
@@ -31,6 +31,17 @@ toolkit_prompt = """
         5.3.1 Create an event at the earliest proposed time by following all the steps listed under section 4, including any substeps.
     5.4 If I am not free at the extracted times:
         5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
+6. If you need to reply or respond to an email that I am forwarding to you:
+    6.1 Do not reply to the most recent email unless explicitly instructed.
+	6.1 Extract the content of the forwarded email first.
+		6.1.1 Search for the forwarded message content by identifying "Forwarded message" or "From" lines within the email body.
+		6.1.2 Always prioritize the forwarded email content over the most recent one in the chain.
+	6.2 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
+		6.2.1 Ensure that the query does not contain double quotes (") around any of the search parameters. For example:
+			6.2.1.1 Correct query format: from:firstnamelastname@company.com subject:Email Topic
+			6.2.1.2 Avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"
+	6.3 Do not reply to the most recent email unless explicitly instructed.
+    6.3 Once the correct email is identified, extract its 'message_id' and reply using the 'o365reply_message' function.
 """
 
 ### START TOOL PROTOTYPES HERE
@@ -45,8 +56,8 @@ o365search_emails_description = (
 class O365SearchEmailsParameters(BaseModel):
     query: str = Field(
         ...,
-        description="The Microsoift Graph v1.0 $search query. This is a"
-        " required parameter and doesn't have a default value."
+        description="The Microsoift Graph v1.0 $search query. This is a "
+        ' required parameter and doesn\'t allow double quotes ("...") around the search criteria.'
         " Example filters include from:sender, from:sender,"
         " to:recipient, subject:subject,"
         " recipients:list_of_recipients, body:excitement,"
@@ -325,57 +336,6 @@ tools = [
 ]
 
 
-def o365parse_proposed_times(
-    email_output: str,
-    client: object,
-    model: str,
-):
-    class Emails(BaseModel):
-        class ProposedTimes(BaseModel):
-            class TimeRange(BaseModel):
-                start_time: str = Field(
-                    ...,
-                    description="Start time in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
-                )
-                end_time: str = Field(
-                    ...,
-                    description="End time in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00'). ALWAYS include an end time.",
-                )
-
-            proposed_times: list[TimeRange] = Field(
-                ...,
-                description="An email's List of proposed times containing containing TimeRanges",
-            )
-
-        emails: list[ProposedTimes] = Field(
-            ..., description="List of emails containing ProposedTimes"
-        )
-
-    prompt = (
-        "You are a helpful assistant that extracts proposed times from the most recent email sender, "
-        " ensuring accuracy and correct time zones. If availability is given for a full day without "
-        " specific times, assume business hours (08:00:00 to 17:00:00) in their local time zone. For "
-        " before or after a certain time, also assume the unspecified times fall within business hours "
-        " (08:00:00 to 17:00:00). If a meeting length is not specified, assume a 1 hour meeting. Only "
-        " consider specific times proposed by the most recent email sender when extracting time ranges. "
-        " If you are unclear about the sender's local time zone, assume it is (UTC-4)."
-    )
-
-    response = client.beta.chat.completions.parse(
-        model=model,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt + " " + email_output,
-            }
-        ],
-        response_format=Emails,
-        temperature=0.2,
-    )
-
-    return response.choices[0].message.parsed.emails.strip()
-
-
 def o365search_emails(
     query: str = "",
     folder: str = "inbox",
@@ -466,157 +426,6 @@ def o365search_email(message_id: str, interface: str = "cli"):
     return output_message
 
 
-def o365search_events(
-    start_datetime: str,
-    end_datetime: str,
-    max_results: int = 10,
-    truncate: bool = True,
-    truncate_limit: int = 150,
-    interface: str = "cli",
-):
-    # Get calendar object
-    # Get mailbox object
-    account = authenticate(interface)
-    schedule = account.schedule()
-    calendar = schedule.get_default_calendar()
-
-    # Process the date range parameters
-    start_datetime_query = datetime.strptime(start_datetime, UTC_FORMAT)
-    end_datetime_query = datetime.strptime(end_datetime, UTC_FORMAT)
-
-    # Run the query
-    q = calendar.new_query("start").greater_equal(start_datetime_query)
-    q.chain("and").on_attribute("end").less_equal(end_datetime_query)
-    events = calendar.get_events(query=q, include_recurring=True, limit=max_results)
-
-    # Generate output dict
-    output_events = []
-    for event in events:
-        output_event = {}
-        output_event["organizer"] = event.organizer
-
-        output_event["subject"] = event.subject
-
-        if truncate:
-            output_event["body"] = clean_body(event.body)[:truncate_limit]
-        else:
-            output_event["body"] = clean_body(event.body)
-
-        # Get the time zone from the search parameters
-        time_zone = start_datetime_query.tzinfo
-        # Assign the datetimes in the search time zone
-        output_event["start_datetime"] = event.start.astimezone(time_zone).strftime(
-            UTC_FORMAT
-        )
-        output_event["end_datetime"] = event.end.astimezone(time_zone).strftime(
-            UTC_FORMAT
-        )
-        output_event["modified_date"] = event.modified.astimezone(time_zone).strftime(
-            UTC_FORMAT
-        )
-
-        output_events.append(output_event)
-
-    return output_events
-
-
-def o365send_message(
-    body: str,
-    to: List[str],
-    subject: str,
-    cc: List[str] = None,
-    bcc: List[str] = None,
-    create_draft: bool = False,
-    interface: str = "cli",
-):
-    # Get mailbox object
-    account = authenticate(interface)
-    mailbox = account.mailbox()
-    message = mailbox.new_message()
-
-    # Assign message values
-    message.body = body
-    message.subject = subject
-    message.to.add(to)
-    if cc is not None:
-        message.cc.add(cc)
-    if bcc is not None:
-        message.bcc.add(bcc)
-
-    if create_draft:
-        message.save_draft()
-        output = "Draft saved: " + str(message)
-    else:
-        message.send()
-        output = "Message sent: " + str(message)
-
-    return output
-
-
-def o365reply_message(
-    message_id: str,
-    body: str,
-    create_draft: bool = False,
-    interface: str = "cli",
-    reply_to_sender=False,
-):
-    # Get mailbox object
-    account = authenticate(interface)
-    mailbox = account.mailbox()
-
-    message = mailbox.get_message(object_id=message_id)
-    reply_message = message.reply()
-
-    # Assign message body value
-    reply_message.body = body
-    # Override 'to' field to the sender if necessary
-    if reply_to_sender:
-        reply_message.to.add(reply_message.sender)
-
-    if create_draft:
-        reply_message.save_draft()
-        output = "Draft saved: " + str(message)
-    else:
-        reply_message.send()
-        output = "Message sent: " + str(message)
-
-    return output
-
-
-def o365send_event(
-    subject: str,
-    start_datetime: str,
-    end_datetime: str,
-    body: str = "",
-    attendees: List[str] = [],
-    interface: str = "cli",
-):
-    # Get calendar object
-    account = authenticate(interface)
-    schedule = account.schedule()
-    calendar = schedule.get_default_calendar()
-
-    event = calendar.new_event()
-
-    event.body = body
-    event.subject = subject
-    # Parse the start time string into a datetime object with time zone information
-    dt = datetime.strptime(start_datetime, UTC_FORMAT)
-    # Convert the start time to UTC
-    event.start = dt.astimezone(ZoneInfo("UTC"))
-    # Do the same for event.end
-    dt = datetime.strptime(end_datetime, UTC_FORMAT)
-    event.end = dt.astimezone(ZoneInfo("UTC"))
-
-    for attendee in attendees:
-        event.attendees.add(attendee)
-
-    event.save()
-
-    output = "Event sent: " + str(event)
-    return output
-
-
 def o365find_free_time_slots(start_datetime, end_datetime):
     """
     Identifies and returns a list of available free time slots within a specified date and time range.
@@ -678,3 +487,154 @@ def o365find_free_time_slots(start_datetime, end_datetime):
         return "There are no free times for this search"
     else:
         return json.dumps(free_slots, indent=4)
+
+
+def o365search_events(
+    start_datetime: str,
+    end_datetime: str,
+    max_results: int = 10,
+    truncate: bool = True,
+    truncate_limit: int = 150,
+    interface: str = "cli",
+):
+    # Get calendar object
+    # Get mailbox object
+    account = authenticate(interface)
+    schedule = account.schedule()
+    calendar = schedule.get_default_calendar()
+
+    # Process the date range parameters
+    start_datetime_query = datetime.strptime(start_datetime, UTC_FORMAT)
+    end_datetime_query = datetime.strptime(end_datetime, UTC_FORMAT)
+
+    # Run the query
+    q = calendar.new_query("start").greater_equal(start_datetime_query)
+    q.chain("and").on_attribute("end").less_equal(end_datetime_query)
+    events = calendar.get_events(query=q, include_recurring=True, limit=max_results)
+
+    # Generate output dict
+    output_events = []
+    for event in events:
+        output_event = {}
+        output_event["organizer"] = event.organizer
+
+        output_event["subject"] = event.subject
+
+        if truncate:
+            output_event["body"] = clean_body(event.body)[:truncate_limit]
+        else:
+            output_event["body"] = clean_body(event.body)
+
+        # Get the time zone from the search parameters
+        time_zone = start_datetime_query.tzinfo
+        # Assign the datetimes in the search time zone
+        output_event["start_datetime"] = event.start.astimezone(time_zone).strftime(
+            UTC_FORMAT
+        )
+        output_event["end_datetime"] = event.end.astimezone(time_zone).strftime(
+            UTC_FORMAT
+        )
+        output_event["modified_date"] = event.modified.astimezone(time_zone).strftime(
+            UTC_FORMAT
+        )
+
+        output_events.append(output_event)
+
+    return output_events
+
+
+def o365reply_message(
+    message_id: str,
+    body: str,
+    create_draft: bool = False,
+    interface: str = "cli",
+    reply_to_sender=False,
+):
+    # Get mailbox object
+    account = authenticate(interface)
+    mailbox = account.mailbox()
+
+    message = mailbox.get_message(object_id=message_id)
+    reply_message = message.reply()
+
+    # Assign message body value
+    reply_message.body = body
+    # Override 'to' field to the sender if necessary
+    if reply_to_sender:
+        reply_message.to.add(reply_message.sender)
+
+    if create_draft:
+        reply_message.save_draft()
+        output = "Draft saved: " + str(message)
+    else:
+        reply_message.send()
+        output = "Message sent: " + str(message)
+
+    return output
+
+
+def o365send_message(
+    body: str,
+    to: List[str],
+    subject: str,
+    cc: List[str] = None,
+    bcc: List[str] = None,
+    create_draft: bool = False,
+    interface: str = "cli",
+):
+    # Get mailbox object
+    account = authenticate(interface)
+    mailbox = account.mailbox()
+    message = mailbox.new_message()
+
+    # Assign message values
+    message.body = body
+    message.subject = subject
+    message.to.add(to)
+    if cc is not None:
+        message.cc.add(cc)
+    if bcc is not None:
+        message.bcc.add(bcc)
+
+    if create_draft:
+        message.save_draft()
+        output = "Draft saved: " + str(message)
+    else:
+        message.send()
+        output = "Message sent: " + str(message)
+
+    return output
+
+
+def o365send_event(
+    subject: str,
+    start_datetime: str,
+    end_datetime: str,
+    body: str = "",
+    attendees: List[str] = [],
+    interface: str = "cli",
+):
+    # Get calendar object
+    account = authenticate(interface)
+    schedule = account.schedule()
+    calendar = schedule.get_default_calendar()
+
+    event = calendar.new_event()
+
+    event.body = body
+    event.subject = subject
+    # Parse the start time string into a datetime object with time zone information
+    dt = datetime.strptime(start_datetime, UTC_FORMAT)
+    # Convert the start time to UTC
+    event.start = dt.astimezone(ZoneInfo("UTC"))
+    # Do the same for event.end
+    dt = datetime.strptime(end_datetime, UTC_FORMAT)
+    event.end = dt.astimezone(ZoneInfo("UTC"))
+
+    for attendee in attendees:
+        event.attendees.add(attendee)
+
+    event.save()
+
+    output = "Event sent: " + str(event)
+    return output

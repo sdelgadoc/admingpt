@@ -1,3 +1,8 @@
-.vscode/launch.json
+.vscode/
 o365_token.txt
 *.pyc
+__pycache__/
+myenv/
+.env
+.venv
+db.sqlite3
