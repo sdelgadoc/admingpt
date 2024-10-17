@@ -5,7 +5,6 @@ Welcome to the **Office365 Toolkit**—a robust toolset designed to simplify ema
 ## Features
 
 - **Email Search**: Find emails using advanced filters like sender, subject, and attachments.
-- **Email Parsing**: Extract meeting times from email content for quick scheduling.
 - **Free Time Detection**: Identify open calendar slots for efficient planning.
 - **Event Scheduling**: Automatically send meeting invites based on extracted times.
 - **Email Reply Automation**: Create and send replies directly from the toolkit.
@@ -28,7 +27,7 @@ cd admingpt_project/email_serivce/tools
 ## Authentication: Generate your Microsoft Graph credentials
 To use this toolkit, you need to set up your credentials explained in the [Microsoft Graph authentication and authorization overview](https://learn.microsoft.com/en-us/graph/auth/). Once you've received a CLIENT_ID and CLIENT_SECRET, you can input them as environmental variables below. You can also use the authentication instructions from the [O365 Python library documentation](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite).
 
-## Usage
+## Usage Examples
 
 ### 1. Searching Emails
 Use `o365search_emails` to search for specific emails.
@@ -37,14 +36,7 @@ Use `o365search_emails` to search for specific emails.
 emails = o365search_emails(query="from:boss@company.com", folder="inbox", max_results=5)
 ```
 
-### 2. Extracting Proposed Times
-Use `o365parse_proposed_times` to parse meeting times from emails.
-
-```python
-proposed_times = o365parse_proposed_times(email_output=email_content)
-```
-
-### 3. Finding Free Time Slots
+### 2. Finding Free Time Slots
 Find your availability with `o365find_free_time_slots`.
 
 ```python
@@ -54,7 +46,7 @@ free_slots = o365find_free_time_slots(
 )
 ```
 
-### 4. Sending Event Invitations
+### 3. Sending Event Invitations
 Send invites using `o365send_event`.
 
 ```python
@@ -67,7 +59,7 @@ o365send_event(
 )
 ```
 
-### 5. Replying to Emails
+### 4. Replying to Emails
 Reply to emails with `o365reply_message`.
 
 ```python
@@ -82,7 +74,6 @@ reply = o365reply_message(
 
 - **o365search_emails**: Search emails with custom queries.
 - **o365search_email**: Retrieve full email content by message ID.
-- **o365parse_proposed_times**: Extract proposed times from emails.
 - **o365find_free_time_slots**: Find free calendar slots.
 - **o365send_message**: Send or draft new emails.
 - **o365reply_message**: Reply to emails or draft replies.
