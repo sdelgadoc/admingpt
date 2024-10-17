@@ -29,7 +29,7 @@ This will create a local copy of the repository.
 ### 2. Install Required Dependencies
 After cloning the repository, navigate to the AdminGPT directory using:
 
-`cd AdminGPT`
+`cd AdminGPT/admingpt_project`
 
 Then, install the necessary dependencies by running:
 
