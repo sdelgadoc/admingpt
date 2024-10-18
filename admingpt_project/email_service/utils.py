@@ -17,6 +17,7 @@ from .tools.utils import authenticate
 assistant_first_name = "Monica"
 assistant_last_name = "Ingenio"
 assistant_name = assistant_first_name + " A. " + assistant_last_name
+business_hours = "(09:00:00 to 17:00:00)"
 
 
 def create_client(debug=False, model=None, interface="cli"):
@@ -46,8 +47,10 @@ def create_client(debug=False, model=None, interface="cli"):
         + " timezone. Today is "
         + formatted_date
         + "."
-        + "My business hours are between '8:00 a.m.' and '5:30 a.m.' of my time zone. "
-        + "I am not free outside these times, and don't recomment times outside these business hours. "
+        + "My business hours are "
+        + business_hours
+        + " of my time zone. "
+        + "I am not free outside these times so don't recomment times outside these business hours. "
     )
 
     # Add the email prompt if the user interacts via email
