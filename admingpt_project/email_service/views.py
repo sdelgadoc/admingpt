@@ -9,7 +9,6 @@ from .utils import (
     run_prompt,
     poll_for_response,
     assistant_first_name,
-    assistant_last_name,
 )
 from .tools.utils import authenticate
 from datetime import datetime as dt
