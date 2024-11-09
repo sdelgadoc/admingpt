@@ -56,6 +56,7 @@ def authenticate(interface="cli"):
                 "https://graph.microsoft.com/MailboxSettings.ReadWrite",
                 "https://graph.microsoft.com/User.Read",
                 "https://graph.microsoft.com/User.ReadBasic.All",
+                'offline_access'
             ],
         ):
             print("Error: Could not authenticate")
