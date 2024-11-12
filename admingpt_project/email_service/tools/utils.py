@@ -1,5 +1,5 @@
 import os
-
+from ..models import TokenModel
 
 def clean_body(body: str) -> str:
     """Clean body of a message or event."""
@@ -28,6 +28,7 @@ def authenticate(interface="cli"):
     """Authenticate using the Microsoft Grah API"""
     try:
         from O365 import Account
+        from O365.utils import DjangoTokenBackend
     except ImportError as e:
         raise ImportError(
             "Cannot import 0365. Please install the package with `pip install O365`."
@@ -45,7 +46,9 @@ def authenticate(interface="cli"):
         )
         return None
 
-    account = Account(credentials)
+    # Use the Django token backend to store the token
+    token_backend = DjangoTokenBackend(token_model=TokenModel)
+    account = Account(credentials, token_backend=token_backend)
 
     if account.is_authenticated is False:
         if not account.authenticate(
