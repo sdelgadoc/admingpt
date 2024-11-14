@@ -1,8 +1,10 @@
 # email_service/views.py
 
-from django.http import JsonResponse
+import os
+from django.http import JsonResponse, HttpResponseRedirect
+from django.urls import reverse
 from django.views import View
-from .models import ProcessedEmail
+from .models import ProcessedEmail, TokenModel, AuthenticationState
 from django.conf import settings
 from .utils import (
     create_client,
@@ -18,7 +20,8 @@ from .tools.o365_toolkit import (
     o365search_email,
     o365reply_message,
 )
-
+from O365 import Account
+from O365.utils import DjangoTokenBackend
 
 class ProcessEmailView(View):
     assistant_first_name = "Monica"
@@ -104,3 +107,81 @@ class ProcessEmailView(View):
         call = emails[0]["body"].startswith(f"Hi {assistant_first_name}, ")
 
         return str(email), message_id, call
+
+class AuthenticationView(View):
+    def get(self, request):
+        # Step 1: Initiate OAuth process and redirect to Microsoft login
+        if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ:
+            client_id = os.environ["CLIENT_ID"]
+            client_secret = os.environ["CLIENT_SECRET"]
+            credentials = (client_id, client_secret)
+        else:
+            print(
+                "Error: The CLIENT_ID and CLIENT_SECRET environmental variables have not "
+                "been set. Visit the following link on how to acquire these authorization "
+                "tokens: https://learn.microsoft.com/en-us/graph/auth/"
+        )
+
+        account = Account(credentials)
+        
+        # Callback URL for OAuth step two
+        callback = request.build_absolute_uri(reverse('authentication_callback'))
+        
+        # Get authorization URL and state
+        url, state = account.con.get_authorization_url(
+            requested_scopes=[
+                "https://graph.microsoft.com/Mail.ReadWrite",
+                "https://graph.microsoft.com/Mail.Send",
+                "https://graph.microsoft.com/Calendars.ReadWrite",
+                "https://graph.microsoft.com/MailboxSettings.ReadWrite",
+                "https://graph.microsoft.com/User.Read",
+                "https://graph.microsoft.com/User.ReadBasic.All",
+                'offline_access'
+            ],
+            redirect_uri=callback
+        )
+        
+        # Store the state in the database
+        AuthenticationState.objects.create(state=state)
+        
+        # Redirect to Microsoft login
+        return HttpResponseRedirect(url)
+
+class AuthenticationCallbackView(View):
+    def get(self, request):
+        # Handle the callback from Microsoft login
+        if "CLIENT_ID" in os.environ and "CLIENT_SECRET" in os.environ:
+            client_id = os.environ["CLIENT_ID"]
+            client_secret = os.environ["CLIENT_SECRET"]
+            credentials = (client_id, client_secret)
+        else:
+            print(
+                "Error: The CLIENT_ID and CLIENT_SECRET environmental variables have not "
+                "been set. Visit the following link on how to acquire these authorization "
+                "tokens: https://learn.microsoft.com/en-us/graph/auth/"
+        )
+
+        # Use the Django token backend to store the token
+        token_backend = DjangoTokenBackend(token_model=TokenModel)
+        account = Account(credentials, token_backend=token_backend)
+        
+        # Retrieve the saved state from the database
+        saved_state = AuthenticationState.objects.latest('created_at')
+        
+        if not saved_state:
+            return JsonResponse({"status": "error", "message": "Invalid state."}, status=400)
+        
+        # Build the callback URL
+        callback = request.build_absolute_uri(reverse('authentication_callback'))
+        
+        # Requested URL includes the authentication information
+        requested_url = request.build_absolute_uri()
+        
+        # Complete token request
+        result = account.con.request_token(
+            requested_url,
+            state=saved_state.state,
+            redirect_uri=callback
+        )
+
+        return HttpResponseRedirect("https://github.com/sdelgadoc/AdminGPT")

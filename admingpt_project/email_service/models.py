@@ -15,3 +15,10 @@ class TokenModel(models.Model):
 
     def __str__(self):
         return f"Token for {self.token.get('client_id', 'unknown')}"
+
+class AuthenticationState(models.Model):
+    state = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.state

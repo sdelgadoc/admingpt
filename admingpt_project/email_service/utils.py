@@ -59,8 +59,8 @@ def create_client(debug=False, model=None, interface="cli"):
             assistant_instructions
             + "I will send you requests in an email that start with the phrase 'Hi Monica, '."
             + "Always respond to my requests either with the answer, or a description of the task you performed after you performed it."
-            + "Respond strictly in HTML using only <br> tags for spacing between paragraphs. Do not use <p> tags for paragraph formatting, as they may not render correctly in email clients."
-            + "Do not use markdown formatting, code block tags, or any other markup language."
+            + "Respond always in HTML using only <br> tags for spacing between paragraphs. Do not use <p> tags for paragraph formatting, as they may not render correctly in email clients."
+            + "Do not ever respond using markdown formatting, code block tags, or any other markup language."
             + "The following is a valid response example: 'Hi [Recipient],<br><br>This is the first line or paragraph.<br>"
             + "These are time slots in one day shown in bullet form:<ul><li>8:00 am - 9:00 am EST</li>"
             + "<li>11:00 am - 1:00 pm EST</li><li>3:00 pm - 4:00 pm EST</li></ul><br>"
