@@ -32,15 +32,15 @@ toolkit_prompt = """
     5.4 If I am not free at the extracted times:
         5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
 6. If you need to reply or respond to an email that I am forwarding to you:
-    6.1 Do not reply to the most recent email unless explicitly instructed.
+    6.1 ALWAYS respond to the forwarded email by following the steps below, and NEVER respond to the email from me.
 	6.1 Extract the content of the forwarded email first.
 		6.1.1 Search for the forwarded message content by identifying "Forwarded message" or "From" lines within the email body.
+        6.1.2 The forwarded message will be immediately after the message I sent you.
 		6.1.2 Always prioritize the forwarded email content over the most recent one in the chain.
 	6.2 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
 		6.2.1 Ensure that the query does not contain double quotes (") around any of the search parameters. For example:
 			6.2.1.1 Correct query format: from:firstnamelastname@company.com subject:Email Topic
 			6.2.1.2 Avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"
-	6.3 Do not reply to the most recent email unless explicitly instructed.
     6.3 Once the correct email is identified, extract its 'message_id' and reply using the 'o365reply_message' function.
 """
 
@@ -637,4 +637,33 @@ def o365send_event(
     event.save()
 
     output = "Event sent: " + str(event)
+    return output
+
+
+def o365delete_message(message_id: str, interface: str = "cli"):
+    """
+    Deletes a specified email message using the provided message_id.
+
+    Parameters:
+    message_id (str): The ID of the message to be deleted.
+    interface (str): Specifies the interface used for authentication (default is "cli").
+
+    Returns:
+    str: A confirmation message indicating the result of the delete action.
+    """
+
+    # Get mailbox object
+    account = authenticate(interface)
+    mailbox = account.mailbox()
+
+    # Retrieve the message
+    message = mailbox.get_message(object_id=message_id)
+
+    # Delete the message
+    if message:
+        message.delete()
+        output = f"Message with ID {message_id} has been deleted."
+    else:
+        output = f"Message with ID {message_id} not found."
+
     return output

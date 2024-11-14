@@ -19,6 +19,7 @@ from .tools.o365_toolkit import (
     o365search_emails,
     o365search_email,
     o365reply_message,
+    o365delete_message,
 )
 from O365 import Account
 from O365.utils import DjangoTokenBackend
@@ -76,6 +77,9 @@ class ProcessEmailView(View):
 
             # Save the processed message_id to the database
             ProcessedEmail.objects.create(message_id=message_id)
+
+            # Delete the processed email
+            output = o365delete_message(message_id, interface="email")
 
             return JsonResponse({"status": "success", "reply": reply})
 
