@@ -626,10 +626,10 @@ def o365send_event(
     # Parse the start time string into a datetime object with time zone information
     dt = datetime.strptime(start_datetime, UTC_FORMAT)
     # Convert the start time to UTC
-    event.start = dt.astimezone(ZoneInfo("UTC"))
+    event.start = dt.astimezone(ZoneInfo("America/New_York"))
     # Do the same for event.end
     dt = datetime.strptime(end_datetime, UTC_FORMAT)
-    event.end = dt.astimezone(ZoneInfo("UTC"))
+    event.end = dt.astimezone(ZoneInfo("America/New_York"))
 
     for attendee in attendees:
         event.attendees.add(attendee)
