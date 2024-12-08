@@ -2,3 +2,6 @@ openai
 O365
 django
 django_extensions
+python-dotenv
+Werkzeug
+pyOpenSSL
