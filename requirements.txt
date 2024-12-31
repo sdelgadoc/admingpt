@@ -6,3 +6,7 @@ python-dotenv
 Werkzeug
 pyOpenSSL
 ipykernel
+dj-database-url
+psycopg2
+gunicorn
+whitenoise
