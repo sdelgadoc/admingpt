@@ -97,7 +97,7 @@ class ProcessEmailView(View):
             f"from:{client_email} to:{client_email} body:'Hi {assistant_first_name}, '"
         )
 
-        emails = o365search_emails(query, "inbox", 5)
+        emails = o365search_emails(query=query, folder="inbox", max_results=5, interface="email")
 
         if not emails:
             raise ValueError("No emails found matching the query.")
@@ -107,7 +107,7 @@ class ProcessEmailView(View):
 
         # Get the latest email
         message_id = emails[0]["message_id"]
-        email = o365search_email(message_id)
+        email = o365search_email(message_id=message_id, interface="email")
         call = emails[0]["body"].startswith(f"Hi {assistant_first_name}, ")
 
         return str(email), message_id, call
