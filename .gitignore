@@ -6,3 +6,5 @@ myenv/
 .env
 .venv
 db.sqlite3
+localhost.crt
+localhost.key
