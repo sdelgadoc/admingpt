@@ -59,7 +59,7 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 
    `Enter your request here:`
 
-## 🏗 Deploy Django Locally
+## 🏗 Deploy Django Application Locally
 
 To deploy the Django application locally, follow these steps:
 
