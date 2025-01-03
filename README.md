@@ -59,6 +59,67 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
 
    `Enter your request here:`
 
+## 🏗 Deploy Django Locally
+
+To deploy the Django application locally, follow these steps:
+
+### 1. Follow the Installation and Testing Steps Above
+Make sure you have completed all installation steps and tested AdminGPT’s basic functionality.
+
+### 2. Create an Environment Variable File
+Create a file in the root directory called `.env` (note the leading dot) and include the following environment variables with your corresponding values:
+
+```
+OPENAI_API_KEY=[Your OpenAI API Key]
+CLIENT_ID=[Your Client ID]
+CLIENT_SECRET=[Your Client Secret]
+SECRET_KEY=[Your Django application's secret key]
+```
+
+### 3. Run the Django Migrations
+Navigate to the project folder and run the migrations:
+
+```bash
+python manage.py migrate
+```
+
+### 4. Start the Local Django Server
+To run the local server using self-signed certificates (for HTTPS):
+
+```bash
+python manage.py runserver_plus --cert-file localhost.crt --key-file localhost.key
+```
+
+### 5. Authenticate and Generate an Authentication Token
+In your browser, go to:
+
+```
+https://127.0.0.1:8000/authenticate/
+```
+
+> **Note**: Your browser may warn that your connection is not private because you are using self-generated certificates. You can safely proceed.
+
+1. Make sure you are logged into your Microsoft account.  
+2. Complete the Microsoft authentication workflow.  
+3. If you are redirected to the [AdminGPT GitHub page](https://github.com/sdelgadoc/AdminGPT), the authentication flow has worked correctly.
+
+### 6. Test the Functionality
+Send yourself an email with the following content:
+
+```
+Subject: Test
+Body: 
+Hi Monica, can you write a limerick describing the theme of all the meetings I have this week?
+```
+
+Then, in your browser, visit:
+
+```
+https://127.0.0.1:8000/process-email/
+```
+
+If you receive an email from **Monica** performing the requested task, everything is working as expected!
+
 ## 📖 Documentation
 Below are documentation resources to help you learn more about AdminGPT, how it was developed, and how to use it.
 
