@@ -27,11 +27,7 @@ To clone the repository to your local machine, use the following command in your
 This will create a local copy of the repository.
 
 ### 2. Install Required Dependencies
-After cloning the repository, navigate to the AdminGPT directory using:
-
-`cd AdminGPT/admingpt_project`
-
-Then, install the necessary dependencies by running:
+Install the necessary dependencies by running:
 
 `pip install -r requirements.txt`
 
@@ -43,7 +39,7 @@ Follow the instructions as per the [OpenAI API Quickstart](https://platform.open
 ### 4. Generate your Microsoft Graph credentials
 To use this toolkit, you need to set up your credentials explained in the [Microsoft Graph authentication and authorization overview](https://learn.microsoft.com/en-us/graph/auth/). Once you've received a CLIENT_ID and CLIENT_SECRET, you can input them as environmental variables below. You can also use the authentication instructions from the [O365 Python library documentation](https://o365.github.io/python-o365/latest/getting_started.html#oauth-setup-pre-requisite).
 
-## 🧪 Test the Auto-GPT Email Plugin
+## 🧪 Testing
 
 Test AdminGPT by summarizing a recent email from a particular sender, the most simple functionality.
 
@@ -53,11 +49,7 @@ Test AdminGPT by summarizing a recent email from a particular sender, the most s
    - CLIENT_ID: The Microsoft Graph client ID for authentication
    - CLIENT_SECRET: The Microsoft Graph client secret for authentication
 
-2. Navigate to the AdminGPT directory using:
-
-   `cd AdminGPT/admingpt_project`
-
-3. Run the CLI using:
+2. Run the CLI using:
 
    `python admingtp_cli.py`
 
