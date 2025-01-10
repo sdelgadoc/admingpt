@@ -38,11 +38,7 @@ toolkit_prompt = """
         6.2.2 The forwarded message will be immediately after the message I sent you.
 		6.2.2 Always prioritize the forwarded email content over the most recent one in the chain.
 	6.3 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
-		6.3.1 Ensure that the query does not contain double quotes (") around any of the search parameters. For example:
-			6.3.1.1 Correct query format: from:firstnamelastname@company.com subject:Email Topic
-			6.3.1.2 Avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"
-    6.4 Once the correct email is identified, extract its 'message_id' and search for the full email using the 'o365search_email' function
-    6.5 With the full email and the email's 'message_id' reply using the 'o365reply_message' function.
+    6.4 With the full email and the email's 'message_id' reply using the 'o365reply_message' function.
 """
 
 ### START TOOL PROTOTYPES HERE
@@ -58,7 +54,7 @@ class O365SearchEmailsParameters(BaseModel):
     query: str = Field(
         ...,
         description="The Microsoift Graph v1.0 $search query. This is a "
-        ' required parameter and doesn\'t allow double quotes ("...") around the search criteria.'
+        ' required parameter. Ensure that the query does not contain double quotes (") around any of the search parameters.'
         " Example filters include from:sender, from:sender,"
         " to:recipient, subject:subject,"
         " recipients:list_of_recipients, body:excitement,"
@@ -68,7 +64,7 @@ class O365SearchEmailsParameters(BaseModel):
         " cc:samanthab@contoso.com, bcc:samanthab@contoso.com,"
         " body:excitement date range example:"
         " received:2023-06-08..2023-06-09  matching example:"
-        " from:amy OR from:david. Character '\"' is not valid for queries.",
+        ' from:amy OR from:david. Avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"',
     )
     folder: str = Field(
         ...,
