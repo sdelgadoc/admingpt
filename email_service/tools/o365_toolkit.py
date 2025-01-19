@@ -32,13 +32,13 @@ toolkit_prompt = """
     5.4 If I am not free at the extracted times:
         5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
 6. If I ask you to reply or respond to an email or to a person who sent an email, which I am including in my email to you:
-    6.1 ALWAYS follow steps 6.2, 6.3, 6.4, and 6.5 to respond to the forwarded email, and NEVER skip steps 6.2, 6.3, 6.4, and 6.5 to respond to the email by me.
+    6.1 Do not ever reply to my email.
 	6.2 Extract the content of the forwarded email first.
 		6.2.1 Search for the forwarded message content by identifying "Forwarded message" or "From" lines within the email body.
         6.2.2 The forwarded message will be immediately after the message I sent you.
 		6.2.2 Always prioritize the forwarded email content over the most recent one in the chain.
 	6.3 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
-    6.4 With the full email and the email's 'message_id' reply using the 'o365reply_message' function.
+    6.4 With the full email and the email's 'message_id' reply to the forwarded email using the 'o365reply_message' function.
 """
 
 ### START TOOL PROTOTYPES HERE
