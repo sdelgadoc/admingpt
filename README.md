@@ -120,6 +120,106 @@ https://127.0.0.1:8000/process-email/
 
 If you receive an email from **Monica** performing the requested task, everything is working as expected!
 
+## 🏗 Deploy Django Application to Heroku
+
+To deploy the Django application to Heroku, follow these steps:
+
+### 1. Follow the Installation and Testing Steps Above
+Ensure you have completed all installation steps and tested AdminGPT’s basic functionality locally.
+
+### 2. Set Up a New Heroku Application
+1. Log in to your [Heroku account](https://heroku.com) and create a new app on the Heroku Dashboard.
+2. Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli) on your computer if you haven’t already.
+
+### 3. Configure Environment Variables on Heroku
+1. Navigate to the **Settings** tab of your Heroku app.
+2. Click “Reveal Config Vars” and add the following environment variables:
+   - `OPENAI_API_KEY`
+   - `CLIENT_ID`
+   - `CLIENT_SECRET`
+   - `SECRET_KEY`
+
+### 4. Configure Static Files for Heroku
+1. Run the following command locally to collect static files:
+   ```bash
+   python manage.py collectstatic
+   ```
+
+### 5. Update Allowed Hosts
+In the `settings.py` file of your Django project, update the `ALLOWED_HOSTS` variable to include your Heroku app's domain:
+
+```python
+ALLOWED_HOSTS = ["your-heroku-app-name.herokuapp.com"]
+```
+
+### 6. Deploy to Heroku
+1. Commit your changes to Git:
+   ```bash
+   git add .
+   git commit -m "Configure static files and update ALLOWED_HOSTS for Heroku"
+   ```
+2. Log in to Heroku from your terminal:
+   ```bash
+   heroku login
+   ```
+3. Add Heroku as a Git remote:
+   ```bash
+   heroku git:remote -a your-heroku-app-name
+   ```
+4. Deploy your code to Heroku:
+   ```bash
+   git push heroku main
+   ```
+
+### 7. Create a Postgres Database Plan
+Set up a Postgres database for your Heroku app:
+
+```bash
+heroku addons:create heroku-postgresql:essential-0
+```
+
+### 8. Run Migrations on Heroku
+After deploying, apply your database migrations:
+
+```bash
+heroku run python manage.py migrate
+```
+
+### 9. Add the Authentication Callback to the Redirect URI
+1. Log in to the [Microsoft Entra Admin Center](https://entra.microsoft.com/).
+2. Navigate to **Identity > Applications > App registrations** and select your application.
+3. Add a redirect URI:
+   - In the application overview, click **Add a redirect URI**.
+   - Select **Web** as the platform.
+   - Add the following redirect URI:
+     ```
+     https://your-heroku-app-name.herokuapp.com/authenticate_callback/
+     ```
+   - Click **Save**.
+
+### 10. Authenticate and Generate an Authentication Token
+1. Open your browser and visit:
+   ```
+   https://your-heroku-app-name.herokuapp.com/authenticate/
+   ```
+   > **Note**: Your browser may warn that the connection is not private. You can safely proceed.
+2. Ensure you are logged into your Microsoft account.
+3. Complete the Microsoft authentication workflow.
+4. If redirected to the [AdminGPT GitHub page](https://github.com/sdelgadoc/AdminGPT), the authentication was successful.
+
+### 11. Test the Functionality
+1. Send yourself an email with the following content:
+   ```
+   Subject: Test
+   Body: 
+   Hi Monica, can you write a limerick describing the theme of all the meetings I have this week?
+   ```
+2. In your browser, visit:
+   ```
+   https://your-heroku-app-name.herokuapp.com/process-email/
+   ```
+3. If you receive an email from **Monica** performing the requested task, everything is working as expected! 
+
 ## 📖 Documentation
 Below are documentation resources to help you learn more about AdminGPT, how it was developed, and how to use it.
 
