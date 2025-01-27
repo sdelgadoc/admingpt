@@ -161,7 +161,7 @@ def poll_for_response(client, thread, run, model, debug=False, interface="cli"):
                         **function_arguments, interface=interface
                     )
                 elif function_name == "o365find_free_time_slots":
-                    output = o365find_free_time_slots(**function_arguments)
+                    output = o365find_free_time_slots(**function_arguments, interface=interface)
 
                 # Clean the function output into JSON-like output
                 output = pprint.pformat(output)

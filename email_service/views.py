@@ -65,7 +65,7 @@ class ProcessEmailView(View):
             run = run_prompt(prompt, client, assistant, thread)
 
             # Poll for response
-            response = poll_for_response(client, thread, run, model)
+            response = poll_for_response(client = client, thread = thread, run = run, model = model, interface = "email")
 
             # Reply to the email
             reply = o365reply_message(

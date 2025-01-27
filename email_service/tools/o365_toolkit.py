@@ -423,7 +423,7 @@ def o365search_email(message_id: str, interface: str = "cli"):
     return output_message
 
 
-def o365find_free_time_slots(start_datetime, end_datetime):
+def o365find_free_time_slots(start_datetime, end_datetime, interface: str = "cli"):
     """
     Identifies and returns a list of available free time slots within a specified date and time range.
 
@@ -436,7 +436,7 @@ def o365find_free_time_slots(start_datetime, end_datetime):
          If there are no free time slots, returns a message indicating that there are no available free times.
     """
 
-    events = o365search_events(start_datetime, end_datetime)
+    events = o365search_events(start_datetime = start_datetime, end_datetime = end_datetime, interface = interface)
 
     if not events:
         # If there are no events, return the entire time
