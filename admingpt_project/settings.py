@@ -36,10 +36,11 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    # Include your Heroku hostname below
-    # "YOUR HEROKU HOSTNAME HERE"
-]
+# Use the HEROKU_HOST_NAME for ALLOWED_HOSTS if it's been set
+if os.environ.get("HEROKU_HOST_NAME"):
+    ALLOWED_HOSTS = [os.environ.get("HEROKU_HOST_NAME")]
+else:
+    ALLOWED_HOSTS = []
 
 
 # Application definition
