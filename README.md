@@ -1,4 +1,4 @@
-# AdminGPT: Your AI-Powered Administrative Assistant, powered by OpenAI's Assistant Framework  🚀
+# AdminGPT: Your AI Administrative Assistant Agent, powered by OpenAI's Assistant Framework  🚀
 
 AdmiGPT is an AI-powered administrative assistant, harnessing the power of OpenAI's Assistant framework to seamlessly integrate with your email and calendar. Similar to Microsoft's Copilot, only better, it's designed to be your ultimate productivity partner, AdmiGPT offers an array of advanced features, making your administrative tasks simpler, faster, and more efficient.
 
@@ -138,6 +138,7 @@ Ensure you have completed all installation steps and tested AdminGPT’s basic f
    - `CLIENT_ID`
    - `CLIENT_SECRET`
    - `SECRET_KEY`
+   - `HEROKU_HOST_NAME` (Set this variable to your application's host name, e.g.: admingpt-1a2b3c4d5e.herokuapp.com)
 
 ### 4. Configure Static Files for Heroku
 1. Run the following command locally to collect static files:
@@ -145,47 +146,35 @@ Ensure you have completed all installation steps and tested AdminGPT’s basic f
    python manage.py collectstatic
    ```
 
-### 5. Update Allowed Hosts
-In the `settings.py` file of your Django project, update the `ALLOWED_HOSTS` variable to include your Heroku app's domain:
-
-```python
-ALLOWED_HOSTS = ["your-heroku-app-name.herokuapp.com"]
-```
-
-### 6. Deploy to Heroku
-1. Commit your changes to Git:
-   ```bash
-   git add .
-   git commit -m "Configure static files and update ALLOWED_HOSTS for Heroku"
-   ```
-2. Log in to Heroku from your terminal:
+### 5. Deploy to Heroku
+1. Log in to Heroku from your terminal:
    ```bash
    heroku login
    ```
-3. Add Heroku as a Git remote:
+2. Add Heroku as a Git remote:
    ```bash
    heroku git:remote -a your-heroku-app-name
    ```
-4. Deploy your code to Heroku:
+3. Deploy your code to Heroku:
    ```bash
    git push heroku main
    ```
 
-### 7. Create a Postgres Database Plan
+### 6. Create a Postgres Database Plan
 Set up a Postgres database for your Heroku app:
 
 ```bash
 heroku addons:create heroku-postgresql:essential-0
 ```
 
-### 8. Run Migrations on Heroku
+### 7. Run Migrations on Heroku
 After deploying, apply your database migrations:
 
 ```bash
 heroku run python manage.py migrate
 ```
 
-### 9. Add the Authentication Callback to the Redirect URI
+### 8. Add the Authentication Callback to the Redirect URI
 1. Log in to the [Microsoft Entra Admin Center](https://entra.microsoft.com/).
 2. Navigate to **Identity > Applications > App registrations** and select your application.
 3. Add a redirect URI:
@@ -197,7 +186,7 @@ heroku run python manage.py migrate
      ```
    - Click **Save**.
 
-### 10. Authenticate and Generate an Authentication Token
+### 9. Authenticate and Generate an Authentication Token
 1. Open your browser and visit:
    ```
    https://your-heroku-app-name.herokuapp.com/authenticate/
@@ -207,7 +196,7 @@ heroku run python manage.py migrate
 3. Complete the Microsoft authentication workflow.
 4. If redirected to the [AdminGPT GitHub page](https://github.com/sdelgadoc/AdminGPT), the authentication was successful.
 
-### 11. Test the Functionality
+### 10. Test the Functionality
 1. Send yourself an email with the following content:
    ```
    Subject: Test
