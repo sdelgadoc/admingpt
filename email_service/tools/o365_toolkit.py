@@ -39,6 +39,32 @@ toolkit_prompt = """
 		6.2.2 Always prioritize the forwarded email content over the most recent one in the chain.
 	6.3 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
     6.4 With the full email and the email's 'message_id' reply to the forwarded email using the 'o365reply_message' function.
+7. If I ask you to perform a "deep search" or to "deep search" for something:
+    7.1. Define Search Scope
+        7.1.1 Identify the key details (emails, contacts, topics, dates).  
+        7.1.2 If unclear, infer keywords, senders, or time frames.  
+        7.1.3 If searching for a person, match against past senders.
+    7.2. Perform an Iterative Search
+        7.2.1 Use 'o365search_emails' with keywords, sender, or subject.
+            7.2.1.1 Retrieve as many results as you are able to process at a time by setting the 'max_results' in the 'o365search_emails' function.
+        7.2.2 If no results:  
+            7.2.2.1 Broaden search by adjusting keywords (synonyms, partial matches).  
+            7.2.2.2 Expand the time frame, checking older emails.  
+            7.2.2.3 Search related threads instead of a single email.  
+            7.2.2.4 Look for indirect mentions (e.g., references in CC/BCC).  
+    7.2.3 Keep refining until you find relevant results or exhaust reasonable variations.
+        7.3. Extract and Analyze Key Details
+            7.3.1 Use 'o365search_email' with 'message_id' to retrieve full content.  
+            7.3.2 Extract dates, contact info, attachments, and decisions.  
+            7.3.3 If searching for a person, scan headers, signatures, and mentions.
+    7.4. Apply Advanced Searching if Needed
+        7.4.1 If results are still lacking:  
+            7.4.1.1 Search across email threads and conversation history.  
+            7.4.1.2 Look for follow-ups or forwarded messages with relevant details.  
+            7.4.1.3 If searching for event details, extract timestamps from replies.
+    7.5. Present findings
+        7.5.1 If you found the necessary information, reference the email or emails where you found the information
+        7.5.2 If you could not find the necessary information, share the most relevant information you found, and suggest alternate search strategies
 """
 
 ### START TOOL PROTOTYPES HERE
@@ -116,21 +142,27 @@ class O365ProposedTimesParameters(BaseModel):
 
 
 o365find_free_time_slots_description = (
-    "ALWAYS use this tool to determine when the user is free, open, or"
-    " available by analyzing the calendar events between a start and end datetime. This tool"
-    " accepts a start and end datetime for which you want to know if I am free. The output is a list of event with each free"
-    " slot's start and end times, which can be conveyed to the user for scheduling and meeting planning."
+    "ALWAYS use this tool to determine when the user is free by analyzing calendar events between "
+    "a start and end datetime on the same day. IMPORTANT: This tool must only be used for single-day "
+    "availability (do not use it for multi-day queries). The output is a list of free slots with their "
+    "start and end times, which can be conveyed to the user for scheduling and meeting planning."
 )
 
 
 class O365FindFreeTimeSlotsParameters(BaseModel):
     start_datetime: str = Field(
         ...,
-        description="Start time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+        description=(
+            "Start time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00'). "
+            "Must be on the same day as end_datetime."
+        ),
     )
     end_datetime: str = Field(
         ...,
-        description="End time of the search query in ISO 8601 format (e.g., '2022-03-28T15:00:00-04:00').",
+        description=(
+            "End time of the search query in ISO 8601 format (e.g., '2022-03-28T16:00:00-04:00'). "
+            "Must be on the same day as start_datetime."
+        ),
     )
 
 

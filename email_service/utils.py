@@ -115,7 +115,6 @@ def run_prompt(prompt, client, assistant, thread):
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant.id,
-        temperature=0.2,
     )
     return run
 
