@@ -32,39 +32,42 @@ toolkit_prompt = """
     5.4 If I am not free at the extracted times:
         5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
 6. If I ask you to reply or respond to an email or to a person who sent an email, which I am including in my email to you:
-    6.1 Do not ever reply to my email.
-	6.2 Extract the content of the forwarded email first.
-		6.2.1 Search for the forwarded message content by identifying "Forwarded message" or "From" lines within the email body.
-        6.2.2 The forwarded message will be immediately after the message I sent you.
-		6.2.2 Always prioritize the forwarded email content over the most recent one in the chain.
-	6.3 Once the forwarded email is identified, extract its sender and subject and use the 'o365search_emails' function to locate the original email.
-    6.4 With the full email and the email's 'message_id' reply to the forwarded email using the 'o365reply_message' function.
-7. If I ask you to perform a "deep search" or to "deep search" for something:
+    6.1. **Never reply to my email** containing the request or forward.  
+    6.2. **Always locate and prioritize the forwarded email content** first by identifying lines such as "Forwarded message" or "From" and checking content immediately following those markers.
+    6.3. Once you have identified the forwarded email, extract its content, sender, and subject.  
+    6.4 Use the o365search_emails function to locate the original (forwarded) email by matching the extracted information.
+    6.5. Once you have the full email content and the email's `message_id`, use the `o365reply_message` function to reply to the forwarded email (never my email).
+7. If I ask you to perform a "deep search" or to "deep search" for something (in emails or calendar):
     7.1. Define Search Scope
-        7.1.1 Identify the key details (emails, contacts, topics, dates).  
-        7.1.2 If unclear, infer keywords, senders, or time frames.  
-        7.1.3 If searching for a person, match against past senders.
+        7.1.1. Identify the key details (emails, contacts, topics, dates).
+        7.1.2. If unclear, infer keywords, senders, or time frames.
+        7.1.3. If searching for a person, match against past senders.
     7.2. Perform an Iterative Search
-        7.2.1 Use 'o365search_emails' with keywords, sender, or subject.
-            7.2.1.1 Retrieve as many results as you are able to process at a time by setting the 'max_results' in the 'o365search_emails' function.
-        7.2.2 If no results:  
-            7.2.2.1 Broaden search by adjusting keywords (synonyms, partial matches).  
-            7.2.2.2 Expand the time frame, checking older emails.  
-            7.2.2.3 Search related threads instead of a single email.  
-            7.2.2.4 Look for indirect mentions (e.g., references in CC/BCC).  
-    7.2.3 Keep refining until you find relevant results or exhaust reasonable variations.
-        7.3. Extract and Analyze Key Details
-            7.3.1 Use 'o365search_email' with 'message_id' to retrieve full content.  
-            7.3.2 Extract dates, contact info, attachments, and decisions.  
-            7.3.3 If searching for a person, scan headers, signatures, and mentions.
+        7.2.1. Search Email Inbox
+            7.2.1.1. Use o365search_emails with keywords, sender, or subject.
+                - Retrieve as many results as you are able to process at a time by setting the max_results in the o365search_emails function.
+        7.2.2. Search Calendar Events
+            7.2.2.1. If the information sought could be in calendar events (e.g., searching for a meeting, event details, or references to dates/times), use o365search_events.
+                - Provide a reasonable start_datetime and end_datetime in ISO 8601 format that aligns with the user's request or your inferred time range.
+                - Set an appropriate max_results and truncate as needed.
+        7.2.3. If No Results Found
+            7.2.3.1. Broaden your search by adjusting keywords (synonyms, partial matches).
+            7.2.3.2. Expand the time frame, checking older emails or events further in the past.
+            7.2.3.3. Search related threads instead of a single email.
+            7.2.3.4. Look for indirect mentions (e.g., references in CC/BCC or tentatively scheduled calendar events).
+        7.2.4. Keep refining until you find relevant results or exhaust reasonable variations.
+    7.3. Extract and Analyze Key Details
+        7.3.1. Use o365search_email with message_id to retrieve full email content (for email searches).
+        7.3.2. For calendar searches, review the returned event details (time, subject, attendees).
+        7.3.3. If searching for a person, scan headers, signatures, mentions, or attendees.
     7.4. Apply Advanced Searching if Needed
-        7.4.1 If results are still lacking:  
-            7.4.1.1 Search across email threads and conversation history.  
-            7.4.1.2 Look for follow-ups or forwarded messages with relevant details.  
-            7.4.1.3 If searching for event details, extract timestamps from replies.
-    7.5. Present findings
-        7.5.1 If you found the necessary information, reference the email or emails where you found the information
-        7.5.2 If you could not find the necessary information, share the most relevant information you found, and suggest alternate search strategies
+        7.4.1. If results are still lacking:
+            7.4.1.1. Search across email threads and conversation history.
+            7.4.1.2. Look for follow-ups or forwarded messages with relevant details.
+            7.4.1.3. If searching for event details, extract timestamps from replies or from o365search_events results.
+    7.5. Present Findings
+        7.5.1. If you found the necessary information, reference the email or event where you found the information.
+        7.5.2. If you could not find the necessary information, share the most relevant information you found, and suggest alternate search strategies.
 """
 
 ### START TOOL PROTOTYPES HERE
