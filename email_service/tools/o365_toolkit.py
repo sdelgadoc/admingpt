@@ -83,7 +83,7 @@ class O365SearchEmailsParameters(BaseModel):
     query: str = Field(
         ...,
         description="The Microsoift Graph v1.0 $search query. This is a "
-        ' required parameter. Ensure that the query does not contain double quotes (") around any of the search parameters.'
+        ' required parameter. The query should NEVER contain double quotes (") around any of the search parameters.'
         " Example filters include from:sender, from:sender,"
         " to:recipient, subject:subject,"
         " recipients:list_of_recipients, body:excitement,"
@@ -93,7 +93,7 @@ class O365SearchEmailsParameters(BaseModel):
         " cc:samanthab@contoso.com, bcc:samanthab@contoso.com,"
         " body:excitement date range example:"
         " received:2023-06-08..2023-06-09  matching example:"
-        ' from:amy OR from:david. Avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"',
+        ' from:amy OR from:david. ALWAYS avoid using: from:"firstnamelastname@company.com" subject:"Email Topic"',
     )
     folder: str = Field(
         ...,
