@@ -38,7 +38,7 @@ DEBUG = True
 
 # Use the HEROKU_HOST_NAME for ALLOWED_HOSTS if it's been set
 if os.environ.get("HEROKU_HOST_NAME"):
-    ALLOWED_HOSTS = [os.environ.get("HEROKU_HOST_NAME")]
+    ALLOWED_HOSTS = [os.environ.get("HEROKU_HOST_NAME"), "127.0.0.1"]
 else:
     ALLOWED_HOSTS = []
 

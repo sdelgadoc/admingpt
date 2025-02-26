@@ -1,6 +1,6 @@
 # email_service/views.py
 
-import os
+import os, json
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.views import View
@@ -139,12 +139,12 @@ class AuthenticationView(View):
                 "https://graph.microsoft.com/Calendars.ReadWrite",
                 "https://graph.microsoft.com/MailboxSettings.ReadWrite",
                 "https://graph.microsoft.com/User.Read",
-                "https://graph.microsoft.com/User.ReadBasic.All",
-                'offline_access'
+                "https://graph.microsoft.com/User.ReadBasic.All"
             ],
             redirect_uri=callback
         )
-        
+        state = json.dumps(state)
+
         # Store the state in the database
         AuthenticationState.objects.create(state=state)
         
@@ -171,6 +171,7 @@ class AuthenticationCallbackView(View):
         
         # Retrieve the saved state from the database
         saved_state = AuthenticationState.objects.latest('created_at')
+        saved_state = json.loads(saved_state.state)
         
         if not saved_state:
             return JsonResponse({"status": "error", "message": "Invalid state."}, status=400)
@@ -183,9 +184,8 @@ class AuthenticationCallbackView(View):
         
         # Complete token request
         result = account.con.request_token(
-            requested_url,
-            state=saved_state.state,
-            redirect_uri=callback
+            authorization_url=requested_url,
+            flow=saved_state
         )
 
         return HttpResponseRedirect("https://github.com/sdelgadoc/AdminGPT")

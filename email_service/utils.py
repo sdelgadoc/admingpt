@@ -98,6 +98,7 @@ def create_client(debug=False, model=None, interface="cli"):
         instructions=assistant_instructions,
         model=model,
         tools=tools,
+        temperature=0.2
     )
 
     thread = client.beta.threads.create()
