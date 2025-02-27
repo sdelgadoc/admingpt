@@ -138,7 +138,7 @@ Ensure you have completed all installation steps and tested AdminGPT’s basic f
    - `CLIENT_ID`
    - `CLIENT_SECRET`
    - `SECRET_KEY`
-   - `HEROKU_HOST_NAME` (Set this variable to your application's host name, e.g.: admingpt-1a2b3c4d5e.herokuapp.com)
+   - `HEROKU_HOST_NAME` (Set this variable to your application's host name, e.g.: [your-app-name].herokuapp.com)
 
 ### 4. Configure Static Files for Heroku
 1. Run the following command locally to collect static files:
