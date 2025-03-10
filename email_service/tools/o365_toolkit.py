@@ -31,7 +31,7 @@ toolkit_prompt = """
         5.3.1 Create an event at the earliest proposed time by following all the steps listed under section 4, including any substeps.
     5.4 If I am not free at the extracted times:
         5.4.1 Return the times I am free during business hours on two consecutive business days starting on the same day as the earliest proposed time by following all the steps listed under section 2, including any substeps.
-6. If I ask you to reply or respond to an email or to a person who sent an email, which I am including in my email to you:
+6. If I ask you to "reply to the email below", which I am including in my email to you:
     6.1. **Never reply to my email** containing the request or forward.  
     6.2. **Always locate and prioritize the forwarded email content** first by identifying lines such as "Forwarded message" or "From" and checking content immediately following those markers.
     6.3. Once you have identified the forwarded email, extract its content, sender, and subject.  
