@@ -25,7 +25,10 @@ def create_client(debug=False, model=None, interface="cli"):
     account = authenticate(interface=interface)
     mailbox = account.mailbox()
     mailboxsettings = mailbox.get_settings()
-    timezone = mailboxsettings.timezone
+    ## TO-DO: Find out why Microsoft didn't change time zones with daylight savings
+    #timezone = mailboxsettings.timezone
+    # Hard-code for now
+    timezone = "Eastern Daylight Time"
     directory = account.directory(resource="me")
     user = directory.get_current_user()
     client_name = user.full_name
