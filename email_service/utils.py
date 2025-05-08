@@ -23,12 +23,13 @@ business_hours = "(09:00:00 to 17:00:00)"
 def create_client(debug=False, model=None, interface="cli"):
     # Retrieve user information
     account = authenticate(interface=interface)
-    mailbox = account.mailbox()
-    mailboxsettings = mailbox.get_settings()
-    ## TO-DO: Find out why Microsoft didn't change time zones with daylight savings
-    #timezone = mailboxsettings.timezone
-    # Hard-code for now
-    timezone = "Eastern Daylight Time"
+    ## Code below pulls user's time zone from Office365
+    ## However, value is innacurate during DST in the US
+    # mailbox = account.mailbox()
+    # mailboxsettings = mailbox.get_settings()
+    # mailbox = account.mailbox()
+    # timezone = mailboxsettings.timezone
+    timezone = "America/New_York"
     directory = account.directory(resource="me")
     user = directory.get_current_user()
     client_name = user.full_name
