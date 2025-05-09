@@ -140,13 +140,7 @@ Ensure you have completed all installation steps and tested AdminGPT’s basic f
    - `SECRET_KEY`
    - `HEROKU_HOST_NAME` (Set this variable to your application's host name, e.g.: [your-app-name].herokuapp.com)
 
-### 4. Configure Static Files for Heroku
-1. Run the following command locally to collect static files:
-   ```bash
-   python manage.py collectstatic
-   ```
-
-### 5. Deploy to Heroku
+### 4. Deploy to Heroku
 1. Log in to Heroku from your terminal:
    ```bash
    heroku login
@@ -160,21 +154,21 @@ Ensure you have completed all installation steps and tested AdminGPT’s basic f
    git push heroku main
    ```
 
-### 6. Create a Postgres Database Plan
+### 5. Create a Postgres Database Plan
 Set up a Postgres database for your Heroku app:
 
 ```bash
 heroku addons:create heroku-postgresql:essential-0
 ```
 
-### 7. Run Migrations on Heroku
+### 6. Run Migrations on Heroku
 After deploying, apply your database migrations:
 
 ```bash
 heroku run python manage.py migrate
 ```
 
-### 8. Add the Authentication Callback to the Redirect URI
+### 7. Add the Authentication Callback to the Redirect URI
 1. Log in to the [Microsoft Entra Admin Center](https://entra.microsoft.com/).
 2. Navigate to **Identity > Applications > App registrations** and select your application.
 3. Add a redirect URI:
@@ -186,7 +180,7 @@ heroku run python manage.py migrate
      ```
    - Click **Save**.
 
-### 9. Authenticate and Generate an Authentication Token
+### 8. Authenticate and Generate an Authentication Token
 1. Open your browser and visit:
    ```
    https://your-heroku-app-name.herokuapp.com/authenticate/
@@ -196,7 +190,7 @@ heroku run python manage.py migrate
 3. Complete the Microsoft authentication workflow.
 4. If redirected to the [AdminGPT GitHub page](https://github.com/sdelgadoc/AdminGPT), the authentication was successful.
 
-### 10. Test the Functionality
+### 9. Test the Functionality
 1. Send yourself an email with the following content:
    ```
    Subject: Test
