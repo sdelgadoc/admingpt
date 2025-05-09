@@ -108,7 +108,7 @@ class ProcessEmailView(View):
         # Get the latest email
         message_id = emails[0]["message_id"]
         email = o365search_email(message_id=message_id, interface="email")
-        call = emails[0]["body"].startswith(f"Hi {assistant_first_name}, ")
+        call = emails[0]["body"].startswith(f"Hi {assistant_first_name},")
 
         return str(email), message_id, call
 
